@@ -1,7 +1,15 @@
 """Data models for Excel cells and translations."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
+
+
+@dataclass
+class RichTextRun:
+    """Represents a single run of text with formatting in a rich text cell."""
+
+    text: str
+    translated_text: Optional[str] = None
 
 
 @dataclass
@@ -14,6 +22,10 @@ class Cell:
     value: str
     is_formula: bool = False
     original_value: Optional[str] = None
+    # For rich text cells: list of text runs that should be translated separately
+    rich_text_runs: Optional[list[RichTextRun]] = None
+    # Shared string index for this cell (if applicable)
+    shared_string_index: Optional[int] = None
 
     @property
     def coordinate(self) -> str:
@@ -33,6 +45,16 @@ class Cell:
 
     def __repr__(self) -> str:
         return f"Cell({self.sheet}!{self.coordinate}={self.value!r})"
+
+
+@dataclass
+class DropdownValidation:
+    """Represents an inline dropdown data validation with translatable values."""
+
+    sheet: str
+    cell_range: str  # e.g., "B5:B10"
+    values: list[str]  # Original dropdown values
+    translated_values: Optional[list[str]] = None
 
 
 @dataclass
