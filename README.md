@@ -20,13 +20,16 @@ Rosetta takes an Excel file as input, translates all text content using Claude, 
 ```bash
 git clone https://github.com/ewalid/rosetta.git
 cd rosetta
-uv sync
 ```
 
-Or with pip:
+Then install dependencies:
 
 ```bash
-pip install -e .
+# Using uv (recommended)
+uv sync
+
+# Or using pip
+pip install .
 ```
 
 ## Usage
