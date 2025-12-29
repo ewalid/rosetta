@@ -46,7 +46,6 @@ class Translator:
 
             # Parse the translations (one per line)
             translations = self._parse_translations(translated_text, len(batch))
-
             return translations
 
         except Exception as e:
@@ -81,28 +80,44 @@ Return only the numbered translations, nothing else."""
         Expected format:
         1. Translation one
         2. Translation two
+        which may span multiple lines
         3. Translation three
+
+        Multi-line translations are supported - content is accumulated until
+        the next numbered item is found.
         """
+        import re
+
         lines = response.strip().split("\n")
-        translations = []
+        translations: dict[int, list[str]] = {}
+        current_num: int | None = None
 
         for line in lines:
-            line = line.strip()
-            if not line:
-                continue
+            # Match lines starting with a number followed by . or )
+            match = re.match(r"^(\d+)[.)\s]+(.*)$", line.strip())
+            if match:
+                num = int(match.group(1))
+                # Only accept translations within expected range
+                if 1 <= num <= expected_count:
+                    current_num = num
+                    translations[num] = [match.group(2).strip()]
+                else:
+                    # Number out of range, treat as continuation of current
+                    if current_num is not None and line.strip():
+                        translations[current_num].append(line.strip())
+            elif current_num is not None and line.strip():
+                # Continuation of the current translation (multi-line content)
+                translations[current_num].append(line.strip())
 
-            # Remove numbering (e.g., "1. " or "1) ")
-            if line[0].isdigit():
-                # Find the first space or period after the number
-                idx = 0
-                while idx < len(line) and (line[idx].isdigit() or line[idx] in ".) "):
-                    idx += 1
-                translation = line[idx:].strip()
-                translations.append(translation)
+        # Build result list in order, joining multi-line translations
+        result = []
+        for i in range(1, expected_count + 1):
+            if i in translations:
+                # Join with newline to preserve multi-line structure
+                result.append("\n".join(translations[i]))
+            else:
+                raise TranslationError(
+                    f"Missing translation for item {i}. Got {len(translations)} translations."
+                )
 
-        if len(translations) != expected_count:
-            raise TranslationError(
-                f"Expected {expected_count} translations, got {len(translations)}"
-            )
-
-        return translations
+        return result
