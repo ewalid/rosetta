@@ -4,12 +4,14 @@ An Excel translation tool that preserves formatting, formulas, and data integrit
 
 ## Overview
 
-Rosetta takes an Excel file as input, translates all text content using Claude, and outputs a new file with translations — without breaking formulas, styles, merged cells, or any other Excel features.
+Rosetta takes an Excel file as input, translates all text content using Claude, and outputs a new file with translations — without breaking formulas, styles, merged cells, images, data validations (dropdowns), or any other Excel features.
 
 ## Features
 
-- **Preserves Excel structure**: Formulas, formatting, merged cells, charts remain intact
+- **Preserves Excel structure**: Formulas, formatting, merged cells, charts, images, and data validations remain intact
 - **Smart extraction**: Only translates text content, skips formulas and numbers
+- **Sheet selection**: Translate all sheets or select specific ones with `--sheets`
+- **Multiline support**: Correctly handles cells with multiple lines of text
 - **Batch processing**: Efficient API usage with configurable batch sizes
 - **Multiple language support**: Any language pair supported by Claude
 
@@ -30,12 +32,28 @@ pip install -e .
 ## Usage
 
 ```bash
-# Basic usage
-rosetta input.xlsx --target-lang french --output translated.xlsx
+# Basic usage (translates all sheets)
+rosetta input.xlsx -t french -o translated.xlsx
 
 # Specify source language (auto-detected by default)
-rosetta input.xlsx --source-lang english --target-lang spanish
+rosetta input.xlsx -s english -t spanish
+
+# Translate specific sheets only
+rosetta input.xlsx -t french --sheets "Sheet1" --sheets "Data"
+
+# Custom batch size (default: 50 cells per API call)
+rosetta input.xlsx -t german -b 100
 ```
+
+### CLI Options
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--target-lang` | `-t` | Target language (required) |
+| `--source-lang` | `-s` | Source language (auto-detect if omitted) |
+| `--output` | `-o` | Output file path (default: `input_translated.xlsx`) |
+| `--batch-size` | `-b` | Cells per batch (default: 50) |
+| `--sheets` | | Sheets to translate (can be repeated, default: all) |
 
 ## Configuration
 
@@ -43,6 +61,14 @@ Set your Anthropic API key:
 
 ```bash
 export ANTHROPIC_API_KEY=your_key_here
+```
+
+Optional environment variables:
+
+```bash
+export ROSETTA_MODEL=claude-sonnet-4-20250514    # Claude model to use
+export ROSETTA_BATCH_SIZE=50                      # Default batch size
+export ROSETTA_MAX_RETRIES=3                      # API retry attempts
 ```
 
 ## Project Structure
