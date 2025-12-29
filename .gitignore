@@ -51,6 +51,9 @@ htmlcov/
 !tests/fixtures/*.xlsx
 !tests/fixtures/*.xls
 
+# Example Excel files
+excel-examples/
+
 # Mypy
 .mypy_cache/
 .dmypy.json
