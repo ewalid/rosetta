@@ -183,7 +183,13 @@ def _extract_rich_text_info(input_file: Path, cells: list[Cell], sheets_filter: 
 
         rid_file_map = {}
         for rel in rels_xml.findall(f".//{{{ns_pkg}}}Relationship"):
-            rid_file_map[rel.get("Id")] = "xl/" + rel.get("Target")
+            target = rel.get("Target")
+            if target.startswith("/"):
+                rid_file_map[rel.get("Id")] = target[1:]
+            elif target.startswith("xl/"):
+                rid_file_map[rel.get("Id")] = target
+            else:
+                rid_file_map[rel.get("Id")] = "xl/" + target
 
         # Build cell coordinate -> shared string index mapping
         cell_ss_map: dict[tuple[str, str], int] = {}  # (sheet, coord) -> ss_index
@@ -312,7 +318,13 @@ def _extract_dropdown_validations(
 
         rid_file_map = {}
         for rel in rels_xml.findall(f".//{{{ns_pkg}}}Relationship"):
-            rid_file_map[rel.get("Id")] = "xl/" + rel.get("Target")
+            target = rel.get("Target")
+            if target.startswith("/"):
+                rid_file_map[rel.get("Id")] = target[1:]
+            elif target.startswith("xl/"):
+                rid_file_map[rel.get("Id")] = target
+            else:
+                rid_file_map[rel.get("Id")] = "xl/" + target
 
         # Check each sheet for data validations
         for sheet_name, rid in sheet_rid_map.items():
@@ -479,7 +491,17 @@ def write_translations(
     # Get rId -> file path mapping
     rid_file_map = {}
     for rel in rels_xml.findall(f".//{{{ns_pkg}}}Relationship"):
-        rid_file_map[rel.get("Id")] = "xl/" + rel.get("Target")
+        target = rel.get("Target")
+        # Handle both absolute paths (/xl/worksheets/...) and relative paths (worksheets/...)
+        if target.startswith("/"):
+            # Absolute path - remove leading slash
+            rid_file_map[rel.get("Id")] = target[1:]
+        elif target.startswith("xl/"):
+            # Already has xl/ prefix
+            rid_file_map[rel.get("Id")] = target
+        else:
+            # Relative path - add xl/ prefix
+            rid_file_map[rel.get("Id")] = "xl/" + target
 
     # Build sheet name -> sheet XML path mapping
     sheet_xml_paths = {}
