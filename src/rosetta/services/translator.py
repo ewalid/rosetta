@@ -60,8 +60,17 @@ class Translator:
             f"{i+1}. {text}" for i, text in enumerate(batch.texts)
         )
 
-        return f"""Translate the following text from {source_lang} to {target_lang}.
+        context_section = ""
+        if batch.context:
+            context_section = f"""
+CONTEXT:
+{batch.context}
 
+Use this context to ensure accurate and domain-appropriate translations.
+"""
+
+        return f"""Translate the following text from {source_lang} to {target_lang}.
+{context_section}
 IMPORTANT RULES:
 - Preserve formatting (line breaks, capitalization, punctuation)
 - Translate ONLY the text content, do not add explanations

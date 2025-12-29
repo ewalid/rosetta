@@ -64,6 +64,7 @@ class TranslationBatch:
     cells: list[Cell]
     source_lang: Optional[str] = None
     target_lang: str = "english"
+    context: Optional[str] = None  # Additional context for more accurate translations
 
     def __len__(self) -> int:
         return len(self.cells)

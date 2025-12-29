@@ -11,6 +11,7 @@ Rosetta takes an Excel file as input, translates all text content using Claude, 
 - **Preserves Excel structure**: Formulas, formatting, merged cells, charts, images, and data validations remain intact
 - **Rich text formatting**: Preserves bold, italic, colors, and fonts within cells
 - **Dropdown translation**: Translates inline dropdown values (e.g., "Yes,No,Maybe")
+- **Context-aware translations**: Provide domain context for more accurate translations
 - **Smart extraction**: Only translates text content, skips formulas and numbers
 - **Sheet selection**: Translate all sheets or select specific ones with `--sheets`
 - **Multiline support**: Correctly handles cells with multiple lines of text
@@ -48,6 +49,10 @@ rosetta input.xlsx -t french --sheets "Sheet1" --sheets "Data"
 
 # Custom batch size (default: 50 cells per API call)
 rosetta input.xlsx -t german -b 100
+
+# Provide context for domain-specific translations
+rosetta input.xlsx -t french -c "This is a medical document with clinical terminology"
+rosetta input.xlsx -t spanish -c "Marketing content for a software company"
 ```
 
 ### CLI Options
@@ -59,6 +64,7 @@ rosetta input.xlsx -t german -b 100
 | `--output` | `-o` | Output file path (default: `input_translated.xlsx`) |
 | `--batch-size` | `-b` | Cells per batch (default: 50) |
 | `--sheets` | | Sheets to translate (can be repeated, default: all) |
+| `--context` | `-c` | Additional context for accurate translations |
 
 ## Configuration
 

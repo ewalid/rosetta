@@ -46,6 +46,12 @@ from rosetta.services import ExcelExtractor, Translator
     default=None,
     help="Sheet names to translate (can be used multiple times). Translates all sheets if not specified.",
 )
+@click.option(
+    "--context",
+    "-c",
+    default=None,
+    help="Additional context for more accurate translations (e.g., 'This is a medical document' or 'Marketing content for a tech company').",
+)
 def cli(
     input_file: Path,
     target_lang: str,
@@ -53,6 +59,7 @@ def cli(
     output: Optional[Path],
     batch_size: int,
     sheets: tuple[str, ...],
+    context: Optional[str],
 ) -> None:
     """Translate Excel files while preserving formatting and formulas.
 
@@ -95,6 +102,7 @@ def cli(
                 cells=batch_cells,
                 source_lang=source_lang,
                 target_lang=target_lang,
+                context=context,
             )
 
             click.echo(
@@ -113,13 +121,13 @@ def cli(
         rich_text_cells = [c for c in translated_cells if c.rich_text_runs]
         if rich_text_cells:
             click.echo(f"Translating {len(rich_text_cells)} rich text cells with formatting...")
-            _translate_rich_text_runs(rich_text_cells, translator, source_lang, target_lang, config.batch_size)
+            _translate_rich_text_runs(rich_text_cells, translator, source_lang, target_lang, config.batch_size, context)
 
         # Extract and translate inline dropdown values
         dropdowns = _extract_dropdown_validations(input_file, sheets_filter)
         if dropdowns:
             click.echo(f"Translating {len(dropdowns)} dropdown lists...")
-            _translate_dropdowns(dropdowns, translator, source_lang, target_lang, config.batch_size)
+            _translate_dropdowns(dropdowns, translator, source_lang, target_lang, config.batch_size, context)
 
         # Write translations back to Excel
         click.echo(f"Writing translations to {output}...")
@@ -235,6 +243,7 @@ def _translate_rich_text_runs(
     source_lang: Optional[str],
     target_lang: str,
     batch_size: int,
+    context: Optional[str] = None,
 ) -> None:
     """Translate individual rich text runs for cells with formatting.
 
@@ -275,6 +284,7 @@ def _translate_rich_text_runs(
             cells=batch_cells,
             source_lang=source_lang,
             target_lang=target_lang,
+            context=context,
         )
         translations = translator.translate_batch(batch)
 
@@ -389,6 +399,7 @@ def _translate_dropdowns(
     source_lang: Optional[str],
     target_lang: str,
     batch_size: int,
+    context: Optional[str] = None,
 ) -> None:
     """Translate dropdown values.
 
@@ -419,6 +430,7 @@ def _translate_dropdowns(
             cells=batch_cells,
             source_lang=source_lang,
             target_lang=target_lang,
+            context=context,
         )
         translations = translator.translate_batch(batch)
 
