@@ -51,16 +51,26 @@ export ANTHROPIC_API_KEY=your_key_here
 rosetta/
 ├── src/
 │   └── rosetta/
-│       ├── models/          # Data models
-│       ├── services/        # Business logic
-│       │   ├── extractor.py # Cell text extraction
-│       │   └── translator.py# Claude API integration
-│       ├── core/            # Config & exceptions
-│       └── main.py          # CLI entry point
+│       ├── __init__.py
+│       ├── models/           # Pydantic data models
+│       │   ├── __init__.py
+│       │   └── cell.py       # Cell and TranslationBatch models
+│       ├── services/         # Business logic (framework-agnostic)
+│       │   ├── __init__.py
+│       │   ├── extractor.py  # Excel cell extraction
+│       │   └── translator.py # Claude API integration
+│       ├── core/             # Configuration and exceptions
+│       │   ├── __init__.py
+│       │   ├── config.py     # Environment config
+│       │   └── exceptions.py # Custom exceptions
+│       ├── api/              # FastAPI routes (future: web interface)
+│       └── main.py           # CLI entry point
 ├── tests/
 ├── pyproject.toml
 └── README.md
 ```
+
+**Architecture**: The `services/` layer is framework-agnostic and can be used by both the CLI (`main.py`) and future API endpoints (`api/`). This allows adding a web interface without refactoring.
 
 ## Requirements
 
