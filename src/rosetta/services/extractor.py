@@ -1,7 +1,7 @@
 """Excel file extraction service."""
 
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Optional
 
 from openpyxl import load_workbook
 from openpyxl.cell.cell import Cell as OpenpyxlCell
@@ -13,13 +13,25 @@ from rosetta.models import Cell
 class ExcelExtractor:
     """Extracts translatable text from Excel files."""
 
-    def __init__(self, file_path: Path) -> None:
-        """Initialize the extractor with an Excel file."""
+    def __init__(self, file_path: Path, sheets: Optional[set[str]] = None) -> None:
+        """Initialize the extractor with an Excel file.
+
+        Args:
+            file_path: Path to the Excel file.
+            sheets: Optional set of sheet names to extract from.
+                    If None, all sheets are extracted.
+        """
         self.file_path = file_path
+        self.sheets_filter = sheets
         try:
             self.workbook = load_workbook(file_path)
         except Exception as e:
             raise ExcelError(f"Failed to load Excel file: {e}") from e
+
+    @property
+    def sheet_names(self) -> list[str]:
+        """Return all sheet names in the workbook."""
+        return self.workbook.sheetnames
 
     def extract_cells(self) -> Iterator[Cell]:
         """Extract all cells with translatable text content.
@@ -28,8 +40,13 @@ class ExcelExtractor:
         - Have text content (strings)
         - Are not formulas
         - Are not empty
+        - Are in the selected sheets (if filter is specified)
         """
         for sheet_name in self.workbook.sheetnames:
+            # Skip sheets not in the filter (if filter is specified)
+            if self.sheets_filter is not None and sheet_name not in self.sheets_filter:
+                continue
+
             sheet = self.workbook[sheet_name]
 
             for row in sheet.iter_rows():
