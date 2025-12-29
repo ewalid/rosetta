@@ -9,6 +9,8 @@ Rosetta takes an Excel file as input, translates all text content using Claude, 
 ## Features
 
 - **Preserves Excel structure**: Formulas, formatting, merged cells, charts, images, and data validations remain intact
+- **Rich text formatting**: Preserves bold, italic, colors, and fonts within cells
+- **Dropdown translation**: Translates inline dropdown values (e.g., "Yes,No,Maybe")
 - **Smart extraction**: Only translates text content, skips formulas and numbers
 - **Sheet selection**: Translate all sheets or select specific ones with `--sheets`
 - **Multiline support**: Correctly handles cells with multiple lines of text
@@ -81,9 +83,9 @@ rosetta/
 ├── src/
 │   └── rosetta/
 │       ├── __init__.py
-│       ├── models/           # Pydantic data models
+│       ├── models/           # Data models (dataclasses)
 │       │   ├── __init__.py
-│       │   └── cell.py       # Cell and TranslationBatch models
+│       │   └── cell.py       # Cell, RichTextRun, DropdownValidation, TranslationBatch
 │       ├── services/         # Business logic (framework-agnostic)
 │       │   ├── __init__.py
 │       │   ├── extractor.py  # Excel cell extraction
@@ -94,12 +96,27 @@ rosetta/
 │       │   └── exceptions.py # Custom exceptions
 │       ├── api/              # FastAPI routes (future: web interface)
 │       └── main.py           # CLI entry point
-├── tests/
+├── tests/                    # Test suite (pytest)
 ├── pyproject.toml
 └── README.md
 ```
 
 **Architecture**: The `services/` layer is framework-agnostic and can be used by both the CLI (`main.py`) and future API endpoints (`api/`). This allows adding a web interface without refactoring.
+
+## Development
+
+### Running Tests
+
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+python -m pytest tests/ -v
+
+# Run tests with coverage
+python -m pytest tests/ -v --cov=rosetta --cov-report=term-missing
+```
 
 ## Requirements
 
