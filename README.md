@@ -1,128 +1,127 @@
 # Rosetta
 
-An Excel translation tool that preserves formatting, formulas, and data integrity.
+[![PyPI version](https://badge.fury.io/py/rosetta-xl.svg)](https://badge.fury.io/py/rosetta-xl)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Overview
+AI-powered Excel translation CLI. Translates Excel files while preserving formatting, formulas, and data integrity.
 
-Rosetta takes an Excel file as input, translates all text content using Claude, and outputs a new file with translations — without breaking formulas, styles, merged cells, images, data validations (dropdowns), or any other Excel features.
+## What it does
 
-## Features
+Rosetta translates all text in your Excel files using Claude AI, without breaking:
+- Formulas and calculations
+- Formatting (fonts, colors, borders)
+- Merged cells and layouts
+- Charts and images
+- Dropdown menus
+- Rich text (bold, italic within cells)
 
-- **Preserves Excel structure**: Formulas, formatting, merged cells, charts, images, and data validations remain intact
-- **Rich text formatting**: Preserves bold, italic, colors, and fonts within cells
-- **Dropdown translation**: Translates inline dropdown values (e.g., "Yes,No,Maybe")
-- **Context-aware translations**: Provide domain context for more accurate translations
-- **Smart extraction**: Only translates text content, skips formulas and numbers
-- **Sheet selection**: Translate all sheets or select specific ones with `--sheets`
-- **Multiline support**: Correctly handles cells with multiple lines of text
-- **Batch processing**: Efficient API usage with configurable batch sizes
-- **Multiple language support**: Any language pair supported by Claude
+## Prerequisites
+
+**You need a Claude API key from Anthropic.**
+
+1. Go to [console.anthropic.com](https://console.anthropic.com/)
+2. Create an account (or sign in)
+3. Go to **API Keys** and create a new key
+4. Copy the key (starts with `sk-ant-...`)
+
+> **Note**: API usage is billed by Anthropic. See [anthropic.com/pricing](https://www.anthropic.com/pricing) for current rates. Translating a typical Excel file costs a few cents.
 
 ## Installation
 
 ```bash
-git clone https://github.com/ewalid/rosetta.git
-cd rosetta
+pip install rosetta-xl
 ```
 
-Then install dependencies:
+Then set your API key:
 
 ```bash
-# Using uv (recommended)
-uv sync
+# Linux/macOS
+export ANTHROPIC_API_KEY=sk-ant-your-key-here
 
-# Or using pip
-pip install .
+# Windows (Command Prompt)
+set ANTHROPIC_API_KEY=sk-ant-your-key-here
+
+# Windows (PowerShell)
+$env:ANTHROPIC_API_KEY="sk-ant-your-key-here"
+```
+
+Or create a `.env` file in your working directory:
+```
+ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
 
 ## Usage
 
 ```bash
-# Basic usage (translates all sheets)
-rosetta input.xlsx -t french -o translated.xlsx
+# Translate to French
+rosetta input.xlsx -t french
+
+# Translate to Spanish with custom output name
+rosetta input.xlsx -t spanish -o translated.xlsx
 
 # Specify source language (auto-detected by default)
-rosetta input.xlsx -s english -t spanish
+rosetta input.xlsx -s english -t german
 
-# Translate specific sheets only
+# Translate only specific sheets
 rosetta input.xlsx -t french --sheets "Sheet1" --sheets "Data"
 
-# Custom batch size (default: 50 cells per API call)
-rosetta input.xlsx -t german -b 100
-
-# Provide context for domain-specific translations
-rosetta input.xlsx -t french -c "This is a medical document with clinical terminology"
-rosetta input.xlsx -t spanish -c "Marketing content for a software company"
+# Add context for better translations (e.g., domain-specific terms)
+rosetta input.xlsx -t french -c "Medical terminology document"
 ```
 
-### CLI Options
+## Options
 
 | Option | Short | Description |
 |--------|-------|-------------|
 | `--target-lang` | `-t` | Target language (required) |
 | `--source-lang` | `-s` | Source language (auto-detect if omitted) |
 | `--output` | `-o` | Output file path (default: `input_translated.xlsx`) |
-| `--batch-size` | `-b` | Cells per batch (default: 50) |
-| `--sheets` | | Sheets to translate (can be repeated, default: all) |
-| `--context` | `-c` | Additional context for accurate translations |
+| `--sheets` | | Sheets to translate (can repeat, default: all) |
+| `--context` | `-c` | Domain context for better accuracy |
+| `--batch-size` | `-b` | Cells per API call (default: 50) |
 
-## Configuration
+## Examples
 
-Set your Anthropic API key:
-
+**Translate a price list to multiple languages:**
 ```bash
-export ANTHROPIC_API_KEY=your_key_here
+rosetta prices.xlsx -t french -o prices_fr.xlsx
+rosetta prices.xlsx -t german -o prices_de.xlsx
+rosetta prices.xlsx -t spanish -o prices_es.xlsx
 ```
 
-Optional environment variables:
-
+**Translate a medical form with context:**
 ```bash
-export ROSETTA_MODEL=claude-sonnet-4-20250514    # Claude model to use
-export ROSETTA_BATCH_SIZE=50                      # Default batch size
-export ROSETTA_MAX_RETRIES=3                      # API retry attempts
+rosetta patient_form.xlsx -t french -c "Medical intake form with clinical terminology"
 ```
 
-## Project Structure
-
-```
-rosetta/
-├── src/
-│   └── rosetta/
-│       ├── __init__.py
-│       ├── models/           # Data models (dataclasses)
-│       │   ├── __init__.py
-│       │   └── cell.py       # Cell, RichTextRun, DropdownValidation, TranslationBatch
-│       ├── services/         # Business logic (framework-agnostic)
-│       │   ├── __init__.py
-│       │   ├── extractor.py  # Excel cell extraction
-│       │   └── translator.py # Claude API integration
-│       ├── core/             # Configuration and exceptions
-│       │   ├── __init__.py
-│       │   ├── config.py     # Environment config
-│       │   └── exceptions.py # Custom exceptions
-│       ├── api/              # FastAPI routes (future: web interface)
-│       └── main.py           # CLI entry point
-├── tests/                    # Test suite (pytest)
-├── pyproject.toml
-└── README.md
-```
-
-**Architecture**: The `services/` layer is framework-agnostic and can be used by both the CLI (`main.py`) and future API endpoints (`api/`). This allows adding a web interface without refactoring.
-
-## Development
-
-### Running Tests
-
+**Translate only the "Questions" sheet:**
 ```bash
-# Install dev dependencies
-pip install -e ".[dev]"
-
-# Run tests
-python -m pytest tests/ -v
-
-# Run tests with coverage
-python -m pytest tests/ -v --cov=rosetta --cov-report=term-missing
+rosetta survey.xlsx -t japanese --sheets "Questions"
 ```
+
+## Troubleshooting
+
+**"ANTHROPIC_API_KEY not set"**
+- Make sure you've exported the key: `export ANTHROPIC_API_KEY=sk-ant-...`
+- Or create a `.env` file with the key
+
+**"Invalid API key"**
+- Check that your key starts with `sk-ant-`
+- Make sure you copied the full key from [console.anthropic.com](https://console.anthropic.com/)
+
+**"Rate limit exceeded"**
+- You've hit Anthropic's rate limits. Wait a minute and try again
+- Or reduce batch size: `rosetta input.xlsx -t french -b 20`
+
+## How it works
+
+1. Extracts all text cells from your Excel file
+2. Sends text to Claude AI for translation (in batches)
+3. Writes translations back, preserving all formatting
+4. Saves the translated file
+
+Your original file is never modified.
 
 ## Requirements
 
