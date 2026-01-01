@@ -49,6 +49,7 @@ dev = [
 Homepage = "https://github.com/ewalid/rosetta"
 Repository = "https://github.com/ewalid/rosetta"
 Issues = "https://github.com/ewalid/rosetta/issues"
+"PyPI" = "https://pypi.org/project/rosetta-xl/"
 
 [project.scripts]
 rosetta = "rosetta.main:cli"

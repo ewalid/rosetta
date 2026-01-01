@@ -29,6 +29,8 @@ Rosetta translates all text in your Excel files using Claude AI, without breakin
 
 ## Installation
 
+Install from [PyPI](https://pypi.org/project/rosetta-xl/):
+
 ```bash
 pip install rosetta-xl
 ```
