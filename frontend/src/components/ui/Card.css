@@ -1,0 +1,62 @@
+.card {
+  border-radius: 1rem;
+}
+
+.card-default {
+  background-color: white;
+  border: 1px solid var(--color-neutral-200);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+:root.dark .card-default {
+  background-color: var(--color-neutral-900);
+  border-color: var(--color-neutral-800);
+}
+
+.card-glass {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+:root.dark .card-glass {
+  background-color: rgba(23, 23, 23, 0.7);
+  border-color: rgba(64, 64, 64, 0.3);
+}
+
+.card-hover {
+  cursor: pointer;
+  transition: all 0.3s ease-out;
+}
+
+.card-hover:hover {
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+:root.dark .card-hover:hover {
+  background-color: rgba(23, 23, 23, 0.8);
+}
+
+.card-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(229, 229, 229, 0.5);
+}
+
+:root.dark .card-header {
+  border-bottom-color: rgba(64, 64, 64, 0.5);
+}
+
+.card-content {
+  padding: 1.5rem;
+}
+
+.card-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(229, 229, 229, 0.5);
+}
+
+:root.dark .card-footer {
+  border-top-color: rgba(64, 64, 64, 0.5);
+}

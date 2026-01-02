@@ -4,10 +4,15 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from rosetta.services.translation_service import count_cells, translate_file
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Limits
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
@@ -17,6 +22,15 @@ app = FastAPI(
     title="Rosetta",
     description="Excel translation API that preserves formatting, formulas, and data integrity",
     version="0.1.0",
+)
+
+# CORS middleware for frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

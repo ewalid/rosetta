@@ -1,0 +1,233 @@
+.dropzone {
+  width: 100%;
+}
+
+.dropzone-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 12rem;
+  padding: 1.5rem;
+  border: 2px dashed var(--color-neutral-300);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+:root.dark .dropzone-area {
+  border-color: var(--color-neutral-700);
+}
+
+.dropzone-area:hover {
+  border-color: var(--color-accent-400);
+}
+
+:root.dark .dropzone-area:hover {
+  border-color: var(--color-accent-600);
+}
+
+.dropzone-area-dragging {
+  border-color: var(--color-accent-500);
+  background-color: var(--color-accent-50);
+  transform: scale(1.02);
+}
+
+:root.dark .dropzone-area-dragging {
+  background-color: rgba(139, 92, 246, 0.1);
+}
+
+.dropzone-area-error {
+  border-color: #f87171;
+}
+
+:root.dark .dropzone-area-error {
+  border-color: #dc2626;
+}
+
+.dropzone-area-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dropzone-icon-wrapper {
+  padding: 1rem;
+  border-radius: 9999px;
+  margin-bottom: 1rem;
+  background-color: var(--color-neutral-100);
+}
+
+:root.dark .dropzone-icon-wrapper {
+  background-color: var(--color-neutral-800);
+}
+
+.dropzone-icon-wrapper-dragging {
+  background-color: var(--color-accent-100);
+}
+
+:root.dark .dropzone-icon-wrapper-dragging {
+  background-color: rgba(139, 92, 246, 0.2);
+}
+
+.dropzone-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--color-neutral-400);
+}
+
+:root.dark .dropzone-icon {
+  color: var(--color-neutral-500);
+}
+
+.dropzone-icon-dragging {
+  color: var(--color-accent-600);
+}
+
+:root.dark .dropzone-icon-dragging {
+  color: var(--color-accent-400);
+}
+
+.dropzone-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-neutral-700);
+}
+
+:root.dark .dropzone-text {
+  color: var(--color-neutral-300);
+}
+
+.dropzone-subtext {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--color-neutral-500);
+}
+
+:root.dark .dropzone-subtext {
+  color: var(--color-neutral-400);
+}
+
+.dropzone-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 0.75rem;
+  background-color: rgba(139, 92, 246, 0.05);
+  pointer-events: none;
+}
+
+/* File preview */
+.file-preview {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--color-accent-50);
+  border: 1px solid var(--color-accent-200);
+  border-radius: 0.75rem;
+}
+
+:root.dark .file-preview {
+  background-color: rgba(139, 92, 246, 0.1);
+  border-color: var(--color-accent-800);
+}
+
+.file-preview-icon {
+  flex-shrink: 0;
+  padding: 0.75rem;
+  background-color: var(--color-accent-100);
+  border-radius: 0.5rem;
+}
+
+:root.dark .file-preview-icon {
+  background-color: rgba(139, 92, 246, 0.2);
+}
+
+.file-preview-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-accent-600);
+}
+
+:root.dark .file-preview-icon svg {
+  color: var(--color-accent-400);
+}
+
+.file-preview-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-preview-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-neutral-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:root.dark .file-preview-name {
+  color: var(--color-neutral-100);
+}
+
+.file-preview-meta {
+  font-size: 0.75rem;
+  color: var(--color-neutral-500);
+}
+
+:root.dark .file-preview-meta {
+  color: var(--color-neutral-400);
+}
+
+.file-preview-remove {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  color: var(--color-neutral-400);
+  transition: all 0.15s;
+}
+
+.file-preview-remove:hover {
+  color: var(--color-neutral-600);
+  background-color: var(--color-neutral-100);
+}
+
+:root.dark .file-preview-remove {
+  color: var(--color-neutral-500);
+}
+
+:root.dark .file-preview-remove:hover {
+  color: var(--color-neutral-300);
+  background-color: var(--color-neutral-800);
+}
+
+.file-preview-remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.file-preview-remove svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Error message */
+.dropzone-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #dc2626;
+}
+
+:root.dark .dropzone-error {
+  color: #f87171;
+}
+
+.dropzone-error svg {
+  width: 1rem;
+  height: 1rem;
+}
