@@ -223,3 +223,188 @@ class TestFileSizeLimits:
 
         assert response.status_code == 400
         assert "File too large" in response.json()["detail"]
+
+
+class TestSheetsEndpoint:
+    """Tests for the /sheets endpoint."""
+
+    def test_get_sheets_returns_sheet_names(self, client, sample_excel_bytes):
+        """POST /sheets should return list of sheet names."""
+        response = client.post(
+            "/sheets",
+            files={"file": ("test.xlsx", sample_excel_bytes)},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "sheets" in data
+        assert isinstance(data["sheets"], list)
+        assert len(data["sheets"]) >= 1
+
+    def test_get_sheets_multiple_sheets(self, client):
+        """POST /sheets with multi-sheet file returns all sheet names."""
+        # Create Excel with multiple sheets
+        wb = Workbook()
+        wb.active.title = "First"
+        wb.create_sheet("Second")
+        wb.create_sheet("Third")
+
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        response = client.post(
+            "/sheets",
+            files={"file": ("multi.xlsx", buffer.getvalue())},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["sheets"] == ["First", "Second", "Third"]
+
+    def test_get_sheets_invalid_file_type(self, client):
+        """POST /sheets with non-Excel file should return 400."""
+        response = client.post(
+            "/sheets",
+            files={"file": ("test.txt", b"Hello world")},
+        )
+
+        assert response.status_code == 400
+        assert "Invalid file type" in response.json()["detail"]
+
+    def test_get_sheets_missing_file(self, client):
+        """POST /sheets without file should return 422."""
+        response = client.post("/sheets")
+        assert response.status_code == 422
+
+    def test_get_sheets_large_file(self, client):
+        """POST /sheets with file over 50MB should return 400."""
+        large_content = b"x" * (51 * 1024 * 1024)
+
+        response = client.post(
+            "/sheets",
+            files={"file": ("large.xlsx", large_content)},
+        )
+
+        assert response.status_code == 400
+        assert "File too large" in response.json()["detail"]
+
+
+class TestFeedbackEndpoint:
+    """Tests for the /feedback endpoint."""
+
+    def test_submit_feedback_success(self, client):
+        """POST /feedback with valid data should succeed."""
+        response = client.post(
+            "/feedback",
+            json={
+                "rating": 5,
+                "improvements": ["Translation quality", "Speed/Performance"],
+                "additional_feedback": "Great tool!",
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+
+    def test_submit_feedback_minimal(self, client):
+        """POST /feedback with only required fields should succeed."""
+        response = client.post(
+            "/feedback",
+            json={
+                "rating": 3,
+                "improvements": [],
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+
+    def test_submit_feedback_all_ratings(self, client):
+        """POST /feedback should accept all valid rating values."""
+        for rating in [1, 2, 3, 4, 5]:
+            response = client.post(
+                "/feedback",
+                json={
+                    "rating": rating,
+                    "improvements": ["User interface"],
+                },
+            )
+            assert response.status_code == 200
+            assert response.json()["success"] is True
+
+    def test_submit_feedback_missing_rating(self, client):
+        """POST /feedback without rating should return 422."""
+        response = client.post(
+            "/feedback",
+            json={
+                "improvements": ["Translation quality"],
+            },
+        )
+        assert response.status_code == 422
+
+    def test_submit_feedback_missing_improvements(self, client):
+        """POST /feedback without improvements should return 422."""
+        response = client.post(
+            "/feedback",
+            json={
+                "rating": 4,
+            },
+        )
+        assert response.status_code == 422
+
+    def test_submit_feedback_invalid_json(self, client):
+        """POST /feedback with invalid JSON should return 422."""
+        response = client.post(
+            "/feedback",
+            content="not valid json",
+            headers={"Content-Type": "application/json"},
+        )
+        assert response.status_code == 422
+
+    def test_submit_feedback_empty_body(self, client):
+        """POST /feedback with empty body should return 422."""
+        response = client.post(
+            "/feedback",
+            json={},
+        )
+        assert response.status_code == 422
+
+    def test_submit_feedback_with_multiple_improvements(self, client):
+        """POST /feedback with multiple improvement areas should succeed."""
+        response = client.post(
+            "/feedback",
+            json={
+                "rating": 4,
+                "improvements": [
+                    "Translation quality",
+                    "Speed/Performance",
+                    "User interface",
+                    "Language options",
+                    "File format support",
+                    "Documentation",
+                ],
+                "additional_feedback": "Comprehensive feedback with all options selected.",
+            },
+        )
+
+        assert response.status_code == 200
+        assert response.json()["success"] is True
+
+    def test_submit_feedback_long_additional_feedback(self, client):
+        """POST /feedback with long additional feedback should succeed."""
+        long_feedback = "This is a detailed feedback. " * 100  # ~3000 chars
+
+        response = client.post(
+            "/feedback",
+            json={
+                "rating": 5,
+                "improvements": ["Translation quality"],
+                "additional_feedback": long_feedback,
+            },
+        )
+
+        assert response.status_code == 200
+        assert response.json()["success"] is True
