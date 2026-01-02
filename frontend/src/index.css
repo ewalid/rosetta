@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Color palette */
+    --color-neutral-50: #FAFAF9;
+    --color-neutral-100: #F5F5F4;
+    --color-neutral-200: #E7E5E4;
+    --color-neutral-300: #D6D3D1;
+    --color-neutral-400: #A8A29E;
+    --color-neutral-500: #78716C;
+    --color-neutral-600: #57534E;
+    --color-neutral-700: #44403C;
+    --color-neutral-800: #292524;
+    --color-neutral-900: #1C1917;
+    --color-neutral-950: #0C0A09;
+
+    --color-accent-50: #F5F3FF;
+    --color-accent-100: #EDE9FE;
+    --color-accent-200: #DDD6FE;
+    --color-accent-300: #C4B5FD;
+    --color-accent-400: #A78BFA;
+    --color-accent-500: #8B5CF6;
+    --color-accent-600: #7C3AED;
+    --color-accent-700: #6D28D9;
+    --color-accent-800: #5B21B6;
+    --color-accent-900: #4C1D95;
+    --color-accent-950: #2E1065;
+  }
+
+  body {
+    background-color: var(--color-neutral-50);
+    color: var(--color-neutral-900);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  :root.dark body {
+    background-color: var(--color-neutral-950);
+    color: var(--color-neutral-50);
+  }
+}
+
+/* Utility classes */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-neutral-300);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-neutral-400);
+}
+
+:root.dark ::-webkit-scrollbar-thumb {
+  background-color: var(--color-neutral-700);
+}
+
+:root.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-neutral-600);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-accent-200);
+}
+
+:root.dark ::selection {
+  background-color: var(--color-accent-800);
+}
