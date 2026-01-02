@@ -211,9 +211,9 @@ class TestFileSizeLimits:
     """Tests for file size validation."""
 
     def test_large_file_returns_400(self, client):
-        """Files over 10MB should be rejected."""
-        # Create a file larger than 10MB
-        large_content = b"x" * (11 * 1024 * 1024)
+        """Files over 50MB should be rejected."""
+        # Create a file larger than 50MB
+        large_content = b"x" * (51 * 1024 * 1024)
 
         response = client.post(
             "/translate",

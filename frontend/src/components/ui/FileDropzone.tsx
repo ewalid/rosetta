@@ -122,7 +122,7 @@ export function FileDropzone({
           >
             <input
               type="file"
-              accept=".xlsx,.xls"
+              accept=".xlsx,.xlsm,.xltx,.xltm"
               onChange={handleFileInput}
               disabled={disabled}
               className="sr-only"
@@ -142,7 +142,7 @@ export function FileDropzone({
             <p className="dropzone-text">
               {isDragging ? 'Drop your file here' : 'Drag and drop your Excel file'}
             </p>
-            <p className="dropzone-subtext">or click to browse • XLSX, XLS supported</p>
+            <p className="dropzone-subtext">or click to browse • XLSX supported</p>
 
             {isDragging && (
               <motion.div

@@ -15,7 +15,8 @@ from rosetta.services.translation_service import count_cells, translate_file
 load_dotenv()
 
 # Limits
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+# Keep in sync with frontend validation/copy (50MB).
+MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
 MAX_CELLS = 5000
 
 app = FastAPI(
