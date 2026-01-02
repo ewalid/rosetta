@@ -190,15 +190,20 @@
   color: var(--color-accent-300);
 }
 
-.footer-links a {
+.footer-right {
+  display: flex;
+  align-items: center;
+}
+
+.footer-right a {
   transition: color 0.15s;
 }
 
-.footer-links a:hover {
+.footer-right a:hover {
   color: var(--color-accent-600);
 }
 
-:root.dark .footer-links a:hover {
+:root.dark .footer-right a:hover {
   color: var(--color-accent-400);
 }
 

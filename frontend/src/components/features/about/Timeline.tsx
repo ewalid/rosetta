@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Languages, GraduationCap, Building2, MapPin, ShoppingCart, Palette, Briefcase, Bot } from 'lucide-react';
+import { Languages, GraduationCap, Building2, MapPin, ShoppingCart, Palette, Briefcase } from 'lucide-react';
 import './About.css';
 
 const timelineData = [

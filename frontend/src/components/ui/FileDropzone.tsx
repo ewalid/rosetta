@@ -46,7 +46,7 @@ export function FileDropzone({
           file,
           name: file.name,
           size: formatFileSize(file.size),
-          type: extension as 'xlsx' | 'xls',
+          type: extension as 'xlsx' | 'xlsm' | 'xltx' | 'xltm',
         });
       }
     },
@@ -62,7 +62,7 @@ export function FileDropzone({
           file,
           name: file.name,
           size: formatFileSize(file.size),
-          type: extension as 'xlsx' | 'xls',
+          type: extension as 'xlsx' | 'xlsm' | 'xltx' | 'xltm',
         });
       }
       e.target.value = '';
