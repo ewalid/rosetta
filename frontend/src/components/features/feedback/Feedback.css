@@ -1,0 +1,318 @@
+/* Feedback Modal */
+.feedback-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+}
+
+.feedback-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 420px;
+  background: white;
+  border-radius: 1.25rem;
+  padding: 2rem;
+  z-index: 101;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+:root.dark .feedback-modal {
+  background: var(--color-neutral-800);
+  border: 1px solid var(--color-neutral-700);
+}
+
+.feedback-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  color: var(--color-neutral-400);
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.feedback-close:hover {
+  background: var(--color-neutral-100);
+  color: var(--color-neutral-600);
+}
+
+:root.dark .feedback-close:hover {
+  background: var(--color-neutral-700);
+  color: var(--color-neutral-300);
+}
+
+.feedback-close svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Progress dots */
+.feedback-progress {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.feedback-progress-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-neutral-200);
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+:root.dark .feedback-progress-dot {
+  background: var(--color-neutral-600);
+}
+
+.feedback-progress-dot.active {
+  background: var(--color-accent-500);
+  transform: scale(1.25);
+}
+
+/* Step content */
+.feedback-step {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.feedback-question {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-neutral-900);
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+:root.dark .feedback-question {
+  color: white;
+}
+
+.feedback-subtitle {
+  font-size: 0.875rem;
+  color: var(--color-neutral-500);
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+:root.dark .feedback-subtitle {
+  color: var(--color-neutral-400);
+}
+
+/* Rating emojis */
+.feedback-rating {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.feedback-emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  background: var(--color-neutral-100);
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+:root.dark .feedback-emoji {
+  background: var(--color-neutral-700);
+}
+
+.feedback-emoji:hover {
+  transform: scale(1.15);
+  border-color: var(--color-accent-300);
+}
+
+.feedback-emoji.selected {
+  border-color: var(--color-accent-500);
+  background: var(--color-accent-100);
+  transform: scale(1.2);
+}
+
+:root.dark .feedback-emoji.selected {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: var(--color-accent-400);
+}
+
+.feedback-emoji-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+/* Improvement chips */
+.feedback-improvements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.feedback-chip {
+  padding: 0.5rem 1rem;
+  background: var(--color-neutral-100);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  color: var(--color-neutral-700);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+:root.dark .feedback-chip {
+  background: var(--color-neutral-700);
+  border-color: var(--color-neutral-600);
+  color: var(--color-neutral-200);
+}
+
+.feedback-chip:hover {
+  border-color: var(--color-accent-300);
+}
+
+.feedback-chip.selected {
+  background: var(--color-accent-100);
+  border-color: var(--color-accent-500);
+  color: var(--color-accent-700);
+}
+
+:root.dark .feedback-chip.selected {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: var(--color-accent-400);
+  color: var(--color-accent-300);
+}
+
+/* Textarea */
+.feedback-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: 0.75rem;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  color: var(--color-neutral-900);
+  resize: none;
+  margin-bottom: 1.5rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+:root.dark .feedback-textarea {
+  background: var(--color-neutral-700);
+  border-color: var(--color-neutral-600);
+  color: white;
+}
+
+.feedback-textarea::placeholder {
+  color: var(--color-neutral-400);
+}
+
+:root.dark .feedback-textarea::placeholder {
+  color: var(--color-neutral-500);
+}
+
+.feedback-textarea:focus {
+  outline: none;
+  border-color: var(--color-accent-500);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+/* Navigation */
+.feedback-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.feedback-nav .button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Success state */
+.feedback-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  text-align: center;
+}
+
+.feedback-success-icon {
+  width: 4rem;
+  height: 4rem;
+  color: #22c55e;
+  margin-bottom: 1rem;
+}
+
+.feedback-success h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-neutral-900);
+  margin-bottom: 0.5rem;
+}
+
+:root.dark .feedback-success h3 {
+  color: white;
+}
+
+.feedback-success p {
+  color: var(--color-neutral-500);
+}
+
+:root.dark .feedback-success p {
+  color: var(--color-neutral-400);
+}
+
+/* Feedback button in footer */
+.footer-feedback-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background: var(--color-accent-100);
+  border: 1px solid var(--color-accent-200);
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-accent-700);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+:root.dark .footer-feedback-btn {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: var(--color-accent-300);
+}
+
+.footer-feedback-btn:hover {
+  background: var(--color-accent-200);
+  border-color: var(--color-accent-300);
+}
+
+:root.dark .footer-feedback-btn:hover {
+  background: rgba(139, 92, 246, 0.25);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.footer-feedback-btn svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}

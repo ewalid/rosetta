@@ -1,13 +1,17 @@
 """FastAPI application for Rosetta translation service."""
 
+import smtplib
 import tempfile
+from email.mime.text import MIMEText
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from openpyxl import load_workbook
+from pydantic import BaseModel
 
 from rosetta.services.translation_service import count_cells, translate_file
 
@@ -39,6 +43,53 @@ app.add_middleware(
 async def root() -> dict:
     """Health check endpoint."""
     return {"status": "ok", "service": "rosetta"}
+
+
+@app.post("/sheets")
+async def get_sheets(
+    file: UploadFile = File(..., description="Excel file to get sheet names from"),
+) -> dict:
+    """Get sheet names from an Excel file.
+
+    Returns a list of sheet names in the uploaded Excel file.
+    """
+    # Validate file type
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No filename provided")
+
+    if not file.filename.lower().endswith((".xlsx", ".xlsm", ".xltx", ".xltm")):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid file type. Only Excel files (.xlsx, .xlsm, .xltx, .xltm) are supported",
+        )
+
+    # Read file content
+    content = await file.read()
+
+    # Check file size
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024 * 1024)}MB",
+        )
+
+    # Save to temp file for processing
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp_input:
+        tmp_input.write(content)
+        input_path = Path(tmp_input.name)
+
+    try:
+        # Load workbook and get sheet names
+        wb = load_workbook(input_path, read_only=True, data_only=True)
+        sheet_names = wb.sheetnames
+        wb.close()
+
+        return {"sheets": sheet_names}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read file: {str(e)}")
+    finally:
+        input_path.unlink(missing_ok=True)
 
 
 @app.post("/translate")
@@ -128,3 +179,64 @@ async def translate(
     finally:
         # Cleanup input file (output file cleaned up after response is sent)
         input_path.unlink(missing_ok=True)
+
+
+class FeedbackRequest(BaseModel):
+    """Feedback submission request."""
+
+    rating: int
+    improvements: List[str]
+    additional_feedback: Optional[str] = None
+
+
+@app.post("/feedback")
+async def submit_feedback(feedback: FeedbackRequest) -> dict:
+    """Submit user feedback via email.
+
+    Sends feedback to the configured email address.
+    """
+    # Build email content
+    rating_emojis = {1: "Very Dissatisfied", 2: "Dissatisfied", 3: "Neutral", 4: "Satisfied", 5: "Very Satisfied"}
+    rating_label = rating_emojis.get(feedback.rating, str(feedback.rating))
+
+    body = f"""New Rosetta Feedback Received
+
+Rating: {feedback.rating}/5 ({rating_label})
+
+Areas for Improvement:
+{chr(10).join(f"  - {item}" for item in feedback.improvements) if feedback.improvements else "  None selected"}
+
+Additional Feedback:
+{feedback.additional_feedback or "None provided"}
+"""
+
+    try:
+        # For now, just log the feedback (email sending requires SMTP config)
+        # In production, configure SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS env vars
+        import os
+
+        smtp_host = os.getenv("SMTP_HOST")
+        if smtp_host:
+            msg = MIMEText(body)
+            msg["Subject"] = f"Rosetta Feedback - Rating {feedback.rating}/5"
+            msg["From"] = os.getenv("SMTP_FROM", "noreply@rosetta.app")
+            msg["To"] = "w.elmselmi@gmail.com"
+
+            with smtplib.SMTP(smtp_host, int(os.getenv("SMTP_PORT", "587"))) as server:
+                server.starttls()
+                smtp_user = os.getenv("SMTP_USER")
+                smtp_pass = os.getenv("SMTP_PASS")
+                if smtp_user and smtp_pass:
+                    server.login(smtp_user, smtp_pass)
+                server.send_message(msg)
+        else:
+            # Log feedback when SMTP is not configured
+            print(f"[Feedback] {body}")
+
+        return {"success": True, "message": "Feedback submitted successfully"}
+
+    except Exception as e:
+        # Don't fail the request if email fails - just log it
+        print(f"[Feedback Error] Failed to send email: {e}")
+        print(f"[Feedback] {body}")
+        return {"success": True, "message": "Feedback recorded"}

@@ -43,7 +43,7 @@ export function useFileUpload(): UseFileUploadReturn {
         file,
         name: file.name,
         size: formatFileSize(file.size),
-        type: extension as 'xlsx' | 'xls',
+        type: extension as 'xlsx' | 'xlsm' | 'xltx' | 'xltm',
       });
     },
     [validateFile]
