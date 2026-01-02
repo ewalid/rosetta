@@ -25,5 +25,5 @@ export interface FileInfo {
   file: File;
   name: string;
   size: string;
-  type: 'xlsx' | 'xls';
+  type: 'xlsx' | 'xlsm' | 'xltx' | 'xltm';
 }

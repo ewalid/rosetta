@@ -63,7 +63,16 @@ packages = ["src/rosetta"]
 exclude = ["src/rosetta/api", "src/rosetta/api/*"]
 
 [tool.hatch.build.targets.sdist]
-exclude = ["src/rosetta/api", "src/rosetta/api/*"]
+exclude = [
+    "src/rosetta/api",
+    "src/rosetta/api/*",
+    "frontend",
+    "frontend/**",
+    "tests",
+    "tests/**",
+    ".github",
+    ".github/**",
+]
 
 [tool.black]
 line-length = 100
