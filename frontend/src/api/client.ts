@@ -97,38 +97,62 @@ export function downloadBlob(blob: Blob, filename: string): void {
   URL.revokeObjectURL(url);
 }
 
+const WEB3FORMS_URL = 'https://api.web3forms.com/submit';
+const WEB3FORMS_ACCESS_KEY = '8ed7e53d-d67a-476c-ad63-1160c7681975';
+
 export async function submitFeedback(request: FeedbackRequest): Promise<FeedbackResponse> {
+  const ratingLabels: Record<number, string> = {
+    1: 'Very Dissatisfied',
+    2: 'Dissatisfied',
+    3: 'Neutral',
+    4: 'Satisfied',
+    5: 'Very Satisfied',
+  };
+
+  const ratingLabel = ratingLabels[request.rating] || String(request.rating);
+  const improvementsText = request.improvements.length > 0
+    ? request.improvements.join(', ')
+    : 'None selected';
+
+  const message = `Rating: ${request.rating}/5 (${ratingLabel})
+
+Areas for Improvement: ${improvementsText}
+
+Additional Feedback: ${request.additionalFeedback || 'None provided'}`;
+
   try {
-    const response = await fetch(`${API_URL}/feedback`, {
+    const response = await fetch(WEB3FORMS_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        rating: request.rating,
-        improvements: request.improvements,
-        additional_feedback: request.additionalFeedback,
+        access_key: WEB3FORMS_ACCESS_KEY,
+        subject: `Rosetta Feedback - Rating ${request.rating}/5 (${ratingLabel})`,
+        from_name: 'Rosetta Feedback',
+        message,
       }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+    const data = await response.json();
+
+    if (data.success) {
       return {
-        success: false,
-        error: errorData.detail || `Failed with status ${response.status}`,
+        success: true,
+        message: 'Feedback submitted successfully',
+      };
+    } else {
+      console.error('[Feedback Error] Web3Forms error:', data);
+      return {
+        success: true, // Still show success to user
+        message: 'Feedback recorded',
       };
     }
-
-    const data = await response.json();
-    return {
-      success: true,
-      message: data.message,
-    };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Network error occurred';
+    console.error('[Feedback Error] Failed to submit feedback:', error);
     return {
-      success: false,
-      error: errorMessage,
+      success: true, // Still show success to user
+      message: 'Feedback recorded',
     };
   }
 }

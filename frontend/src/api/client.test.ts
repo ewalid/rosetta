@@ -126,10 +126,10 @@ describe('API Client', () => {
   });
 
   describe('submitFeedback', () => {
-    it('submits feedback successfully', async () => {
+    it('submits feedback to Web3Forms successfully', async () => {
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ success: true, message: 'Feedback submitted' }),
+        json: () => Promise.resolve({ success: true }),
       } as Response);
 
       const result = await submitFeedback({
@@ -139,16 +139,17 @@ describe('API Client', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.message).toBe('Feedback submitted');
+      expect(result.message).toBe('Feedback submitted successfully');
 
       const fetchCall = vi.mocked(global.fetch).mock.calls[0];
-      expect(fetchCall[0]).toContain('/feedback');
+      expect(fetchCall[0]).toBe('https://api.web3forms.com/submit');
       expect(fetchCall[1]?.headers).toEqual({ 'Content-Type': 'application/json' });
 
       const body = JSON.parse(fetchCall[1]?.body as string);
-      expect(body.rating).toBe(5);
-      expect(body.improvements).toEqual(['Translation quality', 'Speed/Performance']);
-      expect(body.additional_feedback).toBe('Great tool!');
+      expect(body.access_key).toBeDefined();
+      expect(body.subject).toContain('Rating 5/5');
+      expect(body.message).toContain('Translation quality, Speed/Performance');
+      expect(body.message).toContain('Great tool!');
     });
 
     it('submits minimal feedback', async () => {
@@ -166,14 +167,14 @@ describe('API Client', () => {
 
       const fetchCall = vi.mocked(global.fetch).mock.calls[0];
       const body = JSON.parse(fetchCall[1]?.body as string);
-      expect(body.additional_feedback).toBeUndefined();
+      expect(body.message).toContain('None selected');
+      expect(body.message).toContain('None provided');
     });
 
-    it('handles server errors', async () => {
+    it('returns success even on Web3Forms error', async () => {
       vi.mocked(global.fetch).mockResolvedValueOnce({
-        ok: false,
-        status: 422,
-        json: () => Promise.resolve({ detail: 'Invalid rating' }),
+        ok: true,
+        json: () => Promise.resolve({ success: false, message: 'Error' }),
       } as Response);
 
       const result = await submitFeedback({
@@ -181,11 +182,11 @@ describe('API Client', () => {
         improvements: [],
       });
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Invalid rating');
+      // Still shows success to user
+      expect(result.success).toBe(true);
     });
 
-    it('handles network errors', async () => {
+    it('returns success even on network error', async () => {
       vi.mocked(global.fetch).mockRejectedValueOnce(new Error('Network failure'));
 
       const result = await submitFeedback({
@@ -193,8 +194,8 @@ describe('API Client', () => {
         improvements: ['User interface'],
       });
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Network failure');
+      // Still shows success to user
+      expect(result.success).toBe(true);
     });
   });
 });
