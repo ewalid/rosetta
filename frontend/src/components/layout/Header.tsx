@@ -32,6 +32,10 @@ export function Header({ isDarkMode, onToggleDarkMode }: HeaderProps) {
           </motion.a>
 
           <div className="header-actions">
+            <a href="/about" className="header-about-link">
+              About
+            </a>
+
             <Button
               variant="ghost"
               onClick={onToggleDarkMode}

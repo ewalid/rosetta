@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { Heart } from 'lucide-react';
 import { Container } from './Container';
 import './Layout.css';
 
@@ -14,9 +13,15 @@ export function Footer() {
       <Container size="xl">
         <div className="footer-content">
           <p className="footer-built">
-            Built with
-            <Heart className="footer-heart" />
-            using Claude AI
+            Built by{' '}
+            <a
+              href="/about#builder"
+              className="footer-author-link"
+            >
+              Walid
+            </a>
+            <span className="footer-separator">·</span>
+            Powered by Claude AI
           </p>
           <p className="footer-links">
             <a

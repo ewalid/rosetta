@@ -26,7 +26,7 @@ function App() {
                 className="hero-title"
               >
                 Excel Translation
-                <span className="hero-title-gradient">Made Simple</span>
+                <span className="hero-title-gradient">Without Breaking It!</span>
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -34,7 +34,15 @@ function App() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="hero-subtitle"
               >
-                Instantly translate your Excel spreadsheets to any language while preserving formatting and structure.
+                Formulas, formatting, and structure — preserved.
+              </motion.p>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="hero-tagline"
+              >
+                Translate Excel. Keep everything intact.
               </motion.p>
             </div>
 
@@ -46,7 +54,7 @@ function App() {
               transition={{ delay: 0.5 }}
               className="features-section"
             >
-              <p className="features-text">Supports XLSX and XLS files up to 50MB</p>
+              <p className="features-text">Supports XLSX files up to 50MB</p>
               <div className="features-list">
                 <Feature icon="🔒" text="Secure Processing" />
                 <Feature icon="⚡" text="Fast Translation" />
