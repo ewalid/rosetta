@@ -49,8 +49,7 @@ export function About() {
               >
                 8 years in Tech, started as a full-stack software engineer at startups (Partoo, Gorgias)
                 then moved to enterprise software at Adobe and Radancy where I owned the full sales cycle
-                end to end.<br />
-                Rosetta combines both. I built it to solve a real problem and to showcase 
+                end to end.Rosetta combines both. I built it to solve a real problem and to showcase 
                 what's possible when AI meets structured data.
               </motion.p>
 
