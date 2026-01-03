@@ -12,11 +12,10 @@ export interface RecaptchaRef {
 interface RecaptchaProps {
   siteKey: string;
   onChange: (token: string | null) => void;
-  disabled?: boolean;
 }
 
 export const Recaptcha = forwardRef<RecaptchaRef, RecaptchaProps>(
-  ({ siteKey, onChange, disabled = false }, ref) => {
+  ({ siteKey, onChange }, ref) => {
     const recaptchaRef = useRef<ReCAPTCHAType>(null);
 
     useImperativeHandle(ref, () => ({
@@ -47,7 +46,6 @@ export const Recaptcha = forwardRef<RecaptchaRef, RecaptchaProps>(
           sitekey={siteKey}
           onChange={handleChange}
           onExpired={handleExpired}
-          disabled={disabled}
           size="invisible"
         />
       </div>

@@ -237,7 +237,6 @@ export function TranslateForm() {
                 ref={recaptchaRef}
                 siteKey={recaptchaSiteKey}
                 onChange={handleRecaptchaChange}
-                disabled={isTranslating}
               />
             </div>
           )}
