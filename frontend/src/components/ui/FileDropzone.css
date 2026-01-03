@@ -36,7 +36,7 @@
 }
 
 :root.dark .dropzone-area-dragging {
-  background-color: rgba(139, 92, 246, 0.1);
+  background-color: rgba(16, 185, 129, 0.1);
 }
 
 .dropzone-area-error {
@@ -68,7 +68,7 @@
 }
 
 :root.dark .dropzone-icon-wrapper-dragging {
-  background-color: rgba(139, 92, 246, 0.2);
+  background-color: rgba(16, 185, 129, 0.2);
 }
 
 .dropzone-icon {
@@ -113,7 +113,7 @@
   position: absolute;
   inset: 0;
   border-radius: 0.75rem;
-  background-color: rgba(139, 92, 246, 0.05);
+  background-color: rgba(16, 185, 129, 0.05);
   pointer-events: none;
 }
 
@@ -130,7 +130,7 @@
 }
 
 :root.dark .file-preview {
-  background-color: rgba(139, 92, 246, 0.1);
+  background-color: rgba(16, 185, 129, 0.1);
   border-color: var(--color-accent-800);
 }
 
@@ -142,7 +142,7 @@
 }
 
 :root.dark .file-preview-icon {
-  background-color: rgba(139, 92, 246, 0.2);
+  background-color: rgba(16, 185, 129, 0.2);
 }
 
 .file-preview-icon svg {

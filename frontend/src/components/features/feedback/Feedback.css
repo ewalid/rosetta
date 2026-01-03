@@ -146,7 +146,7 @@
 }
 
 :root.dark .feedback-emoji.selected {
-  background: rgba(139, 92, 246, 0.2);
+  background: rgba(16, 185, 129, 0.2);
   border-color: var(--color-accent-400);
 }
 
@@ -192,7 +192,7 @@
 }
 
 :root.dark .feedback-chip.selected {
-  background: rgba(139, 92, 246, 0.2);
+  background: rgba(16, 185, 129, 0.2);
   border-color: var(--color-accent-400);
   color: var(--color-accent-300);
 }
@@ -229,7 +229,7 @@
 .feedback-textarea:focus {
   outline: none;
   border-color: var(--color-accent-500);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 /* Navigation */
@@ -297,8 +297,8 @@
 }
 
 :root.dark .footer-feedback-btn {
-  background: rgba(139, 92, 246, 0.15);
-  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
   color: var(--color-accent-300);
 }
 
@@ -308,8 +308,8 @@
 }
 
 :root.dark .footer-feedback-btn:hover {
-  background: rgba(139, 92, 246, 0.25);
-  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.4);
 }
 
 .footer-feedback-btn svg {

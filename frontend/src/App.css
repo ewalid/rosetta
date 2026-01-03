@@ -6,7 +6,7 @@
   background: linear-gradient(
     135deg,
     var(--color-neutral-50) 0%,
-    rgba(139, 92, 246, 0.05) 50%,
+    rgba(16, 185, 129, 0.03) 50%,
     var(--color-neutral-50) 100%
   );
 }
@@ -15,7 +15,7 @@
   background: linear-gradient(
     135deg,
     var(--color-neutral-950) 0%,
-    rgba(139, 92, 246, 0.1) 50%,
+    rgba(16, 185, 129, 0.05) 50%,
     var(--color-neutral-950) 100%
   );
 }
@@ -49,10 +49,7 @@
 .hero-title-gradient {
   display: block;
   margin-top: 0.5rem;
-  background: linear-gradient(to right, var(--color-accent-600), var(--color-accent-400));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--color-accent-500);
 }
 
 .hero-subtitle {

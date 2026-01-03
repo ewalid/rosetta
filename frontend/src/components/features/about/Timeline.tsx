@@ -49,7 +49,7 @@ const timelineData = [
     company: 'Radancy',
     description: 'End-to-end enterprise sales. ~€600k TCV closed in Q3-Q4 2025. Discovery to deal closing.',
     icon: Briefcase,
-    color: 'purple',
+    color: 'emerald',
   },
   {
     year: '2024',

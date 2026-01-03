@@ -1,18 +1,26 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="32" height="32" rx="8" fill="url(#gradient)"/>
-  <g transform="translate(4, 4)" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <path d="M5 4h8"/>
-    <path d="M7 4v1.5c0 2.5 2 4.5 4.5 4.5"/>
-    <path d="M6 7.5c.5 1.5 1.5 2.5 3 3"/>
-    <path d="M13 20l2.5-6.5L18 20"/>
-    <path d="M14 18h3"/>
-    <path d="M11 11l5.5 5.5"/>
-    <path d="M21 4l-7.5 7.5"/>
+  <g transform="translate(6, 6)">
+    <!-- Rosetta Stone tablet shape -->
+    <rect x="2" y="2" width="12" height="16" rx="1" stroke="white" stroke-width="1.5" fill="none"/>
+    <!-- Hieroglyphic-inspired lines (discrete and professional) -->
+    <line x1="4" y1="5" x2="12" y2="5" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="4" y1="7.5" x2="10" y2="7.5" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="4" y1="10" x2="11" y2="10" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="4" y1="12.5" x2="9" y2="12.5" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="4" y1="15" x2="12" y2="15" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+    <!-- Translation arrow -->
+    <path d="M14 10 L18 10 M16 8 L18 10 L16 12" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Target language representation -->
+    <rect x="18" y="6" width="6" height="8" rx="0.5" stroke="white" stroke-width="1.2" fill="none"/>
+    <line x1="19.5" y1="8" x2="22.5" y2="8" stroke="white" stroke-width="1" stroke-linecap="round"/>
+    <line x1="19.5" y1="10" x2="23" y2="10" stroke="white" stroke-width="1" stroke-linecap="round"/>
+    <line x1="19.5" y1="12" x2="21.5" y2="12" stroke="white" stroke-width="1" stroke-linecap="round"/>
   </g>
   <defs>
     <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#8B5CF6"/>
-      <stop offset="1" stop-color="#6D28D9"/>
+      <stop stop-color="#10B981"/>
+      <stop offset="1" stop-color="#059669"/>
     </linearGradient>
   </defs>
 </svg>

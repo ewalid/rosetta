@@ -60,7 +60,7 @@ export function AboutRosetta() {
           transition={{ duration: 0.5, delay: 0.3 }}
           className="bento-card bento-card-ai"
         >
-          <div className="bento-icon-wrapper bento-icon-purple">
+          <div className="bento-icon-wrapper bento-icon-blue">
             <Bot className="bento-icon" />
           </div>
           <h3 className="bento-card-title">Built for AI</h3>

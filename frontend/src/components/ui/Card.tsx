@@ -11,7 +11,7 @@ type CardProps = {
 };
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant = 'glass', hover = false, children }, ref) => {
+  ({ className, variant = 'default', hover = false, children }, ref) => {
     return (
       <motion.div
         ref={ref}
