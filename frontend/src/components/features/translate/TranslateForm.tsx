@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Languages, Sparkles, Settings2, MessageSquare } from 'lucide-react';
-import { Card, CardContent, Button, FileDropzone } from '../../ui';
+import { Card, CardContent, Button, FileDropzone, Recaptcha, type RecaptchaRef } from '../../ui';
 import { LanguageSelector } from './LanguageSelector';
 import { SheetSelector } from './SheetSelector';
 import { ResultDisplay } from './ResultDisplay';
@@ -21,6 +21,8 @@ export function TranslateForm() {
   const [selectedSheets, setSelectedSheets] = useState<string[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [loadingSheets, setLoadingSheets] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<RecaptchaRef>(null);
 
   const { status, error, filename, translate, downloadResult, reset } = useTranslate();
 
@@ -53,11 +55,38 @@ export function TranslateForm() {
     if (status !== 'idle') {
       reset();
     }
-  }, [status, reset]);
+    // Reset reCAPTCHA when file changes
+    if (fileInfo !== selectedFile) {
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
+    }
+  }, [status, reset, selectedFile]);
+
+  const isTranslating = status === 'uploading' || status === 'translating';
+  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
+  // reCAPTCHA is required only if site key is configured
+  const recaptchaRequired = !!recaptchaSiteKey;
 
   const handleTranslate = useCallback(async () => {
     if (!selectedFile || !targetLanguage) return;
 
+    // If reCAPTCHA is configured, execute it first (invisible mode)
+    if (recaptchaRequired && !recaptchaToken) {
+      try {
+        if (recaptchaRef.current) {
+          recaptchaRef.current.execute();
+          return; // Wait for onChange callback to proceed
+        } else {
+          // reCAPTCHA ref not available, proceed without it (fallback)
+          console.warn('reCAPTCHA ref not available, proceeding without verification');
+        }
+      } catch (error) {
+        console.error('reCAPTCHA execution error:', error);
+        // Continue without reCAPTCHA on error
+      }
+    }
+
+    // Proceed with translation (token already obtained from reCAPTCHA onChange, or no reCAPTCHA)
     await translate({
       file: selectedFile.file,
       targetLanguage,
@@ -66,14 +95,35 @@ export function TranslateForm() {
       sheets: selectedSheets.length > 0 && selectedSheets.length < sheets.length
         ? selectedSheets
         : undefined,
+      recaptchaToken: recaptchaToken || undefined,
     });
+  }, [selectedFile, targetLanguage, sourceLanguage, context, selectedSheets, sheets.length, recaptchaToken, recaptchaRequired, translate]);
+
+  // Handle reCAPTCHA token received (for invisible mode)
+  const handleRecaptchaChange = useCallback((token: string | null) => {
+    setRecaptchaToken(token);
+    // If we have a token and form is ready, proceed with translation
+    if (token && selectedFile && targetLanguage) {
+      translate({
+        file: selectedFile.file,
+        targetLanguage,
+        sourceLanguage: sourceLanguage || undefined,
+        context: context || undefined,
+        sheets: selectedSheets.length > 0 && selectedSheets.length < sheets.length
+          ? selectedSheets
+          : undefined,
+        recaptchaToken: token,
+      });
+    }
   }, [selectedFile, targetLanguage, sourceLanguage, context, selectedSheets, sheets.length, translate]);
 
   const handleRetry = useCallback(() => {
     reset();
+    recaptchaRef.current?.reset();
+    setRecaptchaToken(null);
   }, [reset]);
 
-  const isTranslating = status === 'uploading' || status === 'translating';
+  // For invisible reCAPTCHA, button is enabled when form is ready (reCAPTCHA executes on click)
   const canTranslate = selectedFile && targetLanguage && !isTranslating;
 
   return (
@@ -177,6 +227,18 @@ export function TranslateForm() {
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
+          )}
+
+          {/* Invisible reCAPTCHA - hidden but always rendered when site key is available */}
+          {recaptchaSiteKey && (
+            <div className="recaptcha-wrapper recaptcha-invisible-wrapper">
+              <Recaptcha
+                ref={recaptchaRef}
+                siteKey={recaptchaSiteKey}
+                onChange={handleRecaptchaChange}
+                disabled={isTranslating}
+              />
             </div>
           )}
 

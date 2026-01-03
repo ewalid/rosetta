@@ -10,6 +10,7 @@ export interface TranslateRequest {
   sourceLanguage?: string;
   context?: string;
   sheets?: string[];
+  recaptchaToken?: string;
 }
 
 export interface TranslateResponse {
