@@ -44,7 +44,8 @@ class ExcelExtractor:
         """
         for sheet_name in self.workbook.sheetnames:
             # Skip sheets not in the filter (if filter is specified)
-            if self.sheets_filter is not None and sheet_name not in self.sheets_filter:
+            # Use stripped comparison to handle whitespace differences
+            if self.sheets_filter is not None and not self._sheet_matches_filter(sheet_name):
                 continue
 
             sheet = self.workbook[sheet_name]
@@ -53,6 +54,19 @@ class ExcelExtractor:
                 for openpyxl_cell in row:
                     if self._is_translatable(openpyxl_cell):
                         yield self._to_cell_model(openpyxl_cell, sheet_name)
+
+    def _sheet_matches_filter(self, sheet_name: str) -> bool:
+        """Check if sheet name matches any name in the filter.
+
+        Uses stripped comparison to handle whitespace differences.
+        """
+        if self.sheets_filter is None:
+            return True
+        sheet_name_stripped = sheet_name.strip()
+        for filter_name in self.sheets_filter:
+            if filter_name.strip() == sheet_name_stripped:
+                return True
+        return False
 
     def _is_translatable(self, cell: OpenpyxlCell) -> bool:
         """Check if a cell contains translatable content."""
