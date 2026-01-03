@@ -47,9 +47,11 @@ export function About() {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="profile-intro"
               >
-                I've spent 4 years building products at startups, then 3 years selling enterprise
-                software at Adobe and Radancy. Rosetta combines both — I built it to solve a real
-                problem and to showcase what's possible when AI meets structured data.
+                8 years in Tech, started as a full-stack software engineer at startups (Partoo, Gorgias)
+                then moved to enterprise software at Adobe and Radancy where I owned the full sales cycle
+                end to end.<br />
+                Rosetta combines both. I built it to solve a real problem and to showcase 
+                what's possible when AI meets structured data.
               </motion.p>
 
               <Timeline />
