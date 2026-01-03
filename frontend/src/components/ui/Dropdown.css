@@ -117,7 +117,7 @@
 }
 
 :root.dark .dropdown-option-selected {
-  background-color: rgba(139, 92, 246, 0.2);
+  background-color: rgba(16, 185, 129, 0.2);
   color: var(--color-accent-300);
 }
 

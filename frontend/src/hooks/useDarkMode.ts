@@ -9,7 +9,8 @@ export function useDarkMode(): [boolean, () => void] {
       return stored === 'true';
     }
 
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Default to light mode
+    return false;
   });
 
   useEffect(() => {

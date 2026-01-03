@@ -21,18 +21,18 @@
 
 /* Primary variant */
 .button-primary {
-  background-color: var(--color-accent-600);
+  background-color: var(--color-accent-500);
   color: white;
-  box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.25);
+  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
 }
 
 .button-primary:hover:not(:disabled) {
-  background-color: var(--color-accent-700);
-  box-shadow: 0 20px 25px -5px rgba(139, 92, 246, 0.3);
+  background-color: var(--color-accent-600);
+  box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.25);
 }
 
 .button-primary:active:not(:disabled) {
-  background-color: var(--color-accent-800);
+  background-color: var(--color-accent-700);
 }
 
 .button-primary:focus {

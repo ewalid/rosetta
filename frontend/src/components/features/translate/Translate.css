@@ -15,7 +15,7 @@
 }
 
 :root.dark .translate-form-badge {
-  background-color: rgba(139, 92, 246, 0.2);
+  background-color: rgba(16, 185, 129, 0.2);
 }
 
 .translate-form-badge svg {
@@ -321,7 +321,7 @@
 .sheet-selector-trigger:focus {
   outline: none;
   border-color: var(--color-accent-500);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .sheet-selector-disabled {
@@ -521,7 +521,7 @@
 .context-input-textarea:focus {
   outline: none;
   border-color: var(--color-accent-500);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .context-input-textarea:disabled {
