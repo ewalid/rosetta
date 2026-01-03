@@ -1,0 +1,48 @@
+.recaptcha-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-neutral-200);
+  overflow: hidden;
+}
+
+:root.dark .recaptcha-wrapper {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--color-neutral-700);
+}
+
+/* Invisible reCAPTCHA wrapper - completely hidden */
+.recaptcha-invisible-wrapper {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.recaptcha-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 78px;
+}
+
+.recaptcha-container > div {
+  display: flex;
+  justify-content: center;
+}
+
+/* Hide invisible reCAPTCHA container */
+.recaptcha-invisible {
+  display: none;
+}
+
+/* Override Google's reCAPTCHA styling to match theme */
+.recaptcha-wrapper iframe {
+  border-radius: 0.5rem;
+}
+
