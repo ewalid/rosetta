@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse
 from openpyxl import load_workbook
 
 from rosetta.services.translation_service import count_cells, translate_file
-from rosetta.api.mcp import router as mcp_router
+from .mcp import router as mcp_router
 
 # Load environment variables from .env file
 load_dotenv()
