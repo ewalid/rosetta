@@ -7,13 +7,14 @@ from typing import Optional
 
 import requests
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from openpyxl import load_workbook
 
 from rosetta.services.translation_service import count_cells, translate_file
-from rosetta.api.mcp import router as mcp_router
+from .mcp import router as mcp_router
 
 # Load environment variables from .env file
 load_dotenv()
@@ -24,12 +25,18 @@ RECAPTCHA_VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify"
 
 # CORS configuration - allow frontend origins
 FRONTEND_URL = os.getenv("FRONTEND_URL", "")
+CORS_ALLOW_ALL = os.getenv("CORS_ALLOW_ALL", "false").lower() == "true"
+
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 if FRONTEND_URL:
     ALLOWED_ORIGINS.append(FRONTEND_URL)
+
+# For corporate firewalls, allow all origins if configured
+if CORS_ALLOW_ALL:
+    ALLOWED_ORIGINS = ["*"]
 
 # Limits
 # Keep in sync with frontend validation/copy (50MB).
@@ -42,13 +49,41 @@ app = FastAPI(
     version="0.1.0",
 )
 
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Middleware to add security headers for corporate firewall compatibility."""
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        
+        # Security headers that corporate firewalls expect
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        
+        # HSTS header (only add if HTTPS)
+        if request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        
+        # Connection keep-alive for corporate proxies
+        response.headers["Connection"] = "keep-alive"
+        
+        return response
+
+
+# Add security headers middleware first (before CORS)
+app.add_middleware(SecurityHeadersMiddleware)
+
 # CORS middleware for frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
+    allow_credentials=not CORS_ALLOW_ALL,  # Disable credentials if allowing all origins
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Register MCP router
@@ -59,6 +94,16 @@ app.include_router(mcp_router)
 async def root() -> dict:
     """Health check endpoint."""
     return {"status": "ok", "service": "rosetta"}
+
+
+@app.get("/health")
+async def health() -> dict:
+    """Lightweight health check endpoint for firewalls and monitoring.
+    
+    Returns minimal JSON response quickly to help corporate firewalls
+    validate the connection without heavy processing.
+    """
+    return {"status": "healthy"}
 
 
 @app.post("/sheets")

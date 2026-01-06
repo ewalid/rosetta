@@ -7,18 +7,49 @@ MCP Specification: https://modelcontextprotocol.io/
 """
 
 import base64
+import re
 import tempfile
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from rosetta.services import ExcelExtractor
 from rosetta.services.translation_service import count_cells, translate_file
 
 # Pricing estimates (approximate costs per 1000 cells)
 COST_PER_1000_CELLS_USD = 0.05  # Based on Claude API pricing
+
+# Security constraints
+MAX_CONTEXT_LENGTH = 500
+MAX_FILENAME_LENGTH = 255
+MAX_SHEET_NAME_LENGTH = 100
+MAX_SHEETS_COUNT = 50
+ALLOWED_LANGUAGES = {
+    "english", "french", "spanish", "german", "italian", "portuguese",
+    "dutch", "russian", "chinese", "japanese", "korean", "arabic",
+    "hindi", "turkish", "polish", "swedish", "norwegian", "danish",
+    "finnish", "greek", "czech", "romanian", "hungarian", "thai",
+    "vietnamese", "indonesian", "malay", "filipino", "hebrew", "ukrainian",
+}
+
+# Patterns to block in context (prompt injection prevention)
+DANGEROUS_PATTERNS = [
+    r"ignore\s+(previous|above|all)\s+instructions?",
+    r"disregard\s+(previous|above|all)\s+instructions?",
+    r"forget\s+(previous|above|all)\s+instructions?",
+    r"forget\s+all\s+previous\s+instructions?",  # Match "forget all previous instructions"
+    r"new\s+instructions?:",
+    r"system\s*:",
+    r"assistant\s*:",
+    r"<\s*system\s*>",
+    r"<\s*/?\s*prompt\s*>",
+    r"you\s+are\s+now",
+    r"act\s+as\s+if",
+    r"pretend\s+(to\s+be|you\s+are)",
+    r"roleplay\s+as",
+]
 
 router = APIRouter(prefix="/mcp", tags=["MCP"])
 
@@ -72,6 +103,202 @@ class MCPContentItem(BaseModel):
 class MCPToolCallResult(BaseModel):
     content: list[MCPContentItem]
     isError: bool = False
+
+
+# ============================================================================
+# Input Validation Models (Security)
+# ============================================================================
+
+
+def validate_base64(value: str) -> str:
+    """Validate that a string is valid base64."""
+    if not value:
+        raise ValueError("Base64 content cannot be empty")
+    try:
+        # Check if it's valid base64
+        decoded = base64.b64decode(value, validate=True)
+        # Check minimum Excel file size (empty xlsx is ~4KB)
+        if len(decoded) < 100:
+            raise ValueError("File content too small to be a valid Excel file")
+        # Check maximum size (50MB)
+        if len(decoded) > 50 * 1024 * 1024:
+            raise ValueError("File exceeds maximum size of 50MB")
+        return value
+    except Exception as e:
+        if "File" in str(e) or "Base64" in str(e):
+            raise
+        raise ValueError(f"Invalid base64 encoding: {e}")
+
+
+def validate_context(value: Optional[str]) -> Optional[str]:
+    """Validate context field for security (prevent prompt injection)."""
+    if value is None:
+        return None
+
+    # Length check
+    if len(value) > MAX_CONTEXT_LENGTH:
+        raise ValueError(f"Context exceeds maximum length of {MAX_CONTEXT_LENGTH} characters")
+
+    # Check for dangerous patterns (prompt injection attempts)
+    value_lower = value.lower()
+    for pattern in DANGEROUS_PATTERNS:
+        if re.search(pattern, value_lower, re.IGNORECASE):
+            raise ValueError("Context contains disallowed content")
+
+    # Only allow alphanumeric, spaces, and basic punctuation
+    # This is strict but safe
+    if not re.match(r'^[\w\s\.,;:!\?\-\(\)\'\"&/]+$', value, re.UNICODE):
+        raise ValueError("Context contains invalid characters")
+
+    return value.strip()
+
+
+def validate_language(value: str) -> str:
+    """Validate language is in allowed list."""
+    normalized = value.lower().strip()
+    if normalized not in ALLOWED_LANGUAGES:
+        raise ValueError(
+            f"Language '{value}' not supported. Allowed: {', '.join(sorted(ALLOWED_LANGUAGES))}"
+        )
+    return normalized
+
+
+def validate_filename(value: str) -> str:
+    """Validate filename for security."""
+    if not value:
+        raise ValueError("Filename cannot be empty")
+    if len(value) > MAX_FILENAME_LENGTH:
+        raise ValueError(f"Filename exceeds maximum length of {MAX_FILENAME_LENGTH}")
+
+    # Prevent path traversal
+    if ".." in value or "/" in value or "\\" in value:
+        raise ValueError("Filename contains invalid path characters")
+
+    # Must be an Excel file
+    if not value.lower().endswith((".xlsx", ".xlsm", ".xltx", ".xltm")):
+        raise ValueError("Filename must have Excel extension (.xlsx, .xlsm, .xltx, .xltm)")
+
+    return value
+
+
+def validate_sheets(value: Optional[list[str]]) -> Optional[list[str]]:
+    """Validate sheet names list."""
+    if value is None:
+        return None
+
+    if len(value) > MAX_SHEETS_COUNT:
+        raise ValueError(f"Too many sheets specified (max {MAX_SHEETS_COUNT})")
+
+    validated = []
+    for sheet in value:
+        if not sheet or not isinstance(sheet, str):
+            raise ValueError("Sheet name must be a non-empty string")
+        if len(sheet) > MAX_SHEET_NAME_LENGTH:
+            raise ValueError(f"Sheet name exceeds maximum length of {MAX_SHEET_NAME_LENGTH}")
+        validated.append(sheet.strip())
+
+    return validated
+
+
+class TranslateExcelArgs(BaseModel):
+    """Validated arguments for translate_excel tool."""
+    file_content_base64: str
+    filename: str
+    target_language: str
+    source_language: Optional[str] = None
+    context: Optional[str] = None
+    sheets: Optional[list[str]] = None
+
+    @field_validator("file_content_base64")
+    @classmethod
+    def check_base64(cls, v: str) -> str:
+        return validate_base64(v)
+
+    @field_validator("filename")
+    @classmethod
+    def check_filename(cls, v: str) -> str:
+        return validate_filename(v)
+
+    @field_validator("target_language")
+    @classmethod
+    def check_target_language(cls, v: str) -> str:
+        return validate_language(v)
+
+    @field_validator("source_language")
+    @classmethod
+    def check_source_language(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        return validate_language(v)
+
+    @field_validator("context")
+    @classmethod
+    def check_context(cls, v: Optional[str]) -> Optional[str]:
+        return validate_context(v)
+
+    @field_validator("sheets")
+    @classmethod
+    def check_sheets(cls, v: Optional[list[str]]) -> Optional[list[str]]:
+        return validate_sheets(v)
+
+
+class GetSheetsArgs(BaseModel):
+    """Validated arguments for get_excel_sheets tool."""
+    file_content_base64: str
+
+    @field_validator("file_content_base64")
+    @classmethod
+    def check_base64(cls, v: str) -> str:
+        return validate_base64(v)
+
+
+class CountCellsArgs(BaseModel):
+    """Validated arguments for count_translatable_cells tool."""
+    file_content_base64: str
+    sheets: Optional[list[str]] = None
+
+    @field_validator("file_content_base64")
+    @classmethod
+    def check_base64(cls, v: str) -> str:
+        return validate_base64(v)
+
+    @field_validator("sheets")
+    @classmethod
+    def check_sheets(cls, v: Optional[list[str]]) -> Optional[list[str]]:
+        return validate_sheets(v)
+
+
+class PreviewCellsArgs(BaseModel):
+    """Validated arguments for preview_cells tool."""
+    file_content_base64: str
+    limit: int = Field(default=10, ge=1, le=50)
+    sheets: Optional[list[str]] = None
+
+    @field_validator("file_content_base64")
+    @classmethod
+    def check_base64(cls, v: str) -> str:
+        return validate_base64(v)
+
+    @field_validator("sheets")
+    @classmethod
+    def check_sheets(cls, v: Optional[list[str]]) -> Optional[list[str]]:
+        return validate_sheets(v)
+
+
+class EstimateCostArgs(BaseModel):
+    """Validated arguments for estimate_translation_cost tool."""
+    file_content_base64: str
+    sheets: Optional[list[str]] = None
+
+    @field_validator("file_content_base64")
+    @classmethod
+    def check_base64(cls, v: str) -> str:
+        return validate_base64(v)
+
+    @field_validator("sheets")
+    @classmethod
+    def check_sheets(cls, v: Optional[list[str]]) -> Optional[list[str]]:
+        return validate_sheets(v)
 
 
 # ============================================================================
@@ -246,15 +473,13 @@ def col_to_letter(col: int) -> str:
 
 def tool_translate_excel(args: dict) -> MCPToolCallResult:
     """Execute the translate_excel tool."""
-    file_content_base64 = args["file_content_base64"]
-    filename = args["filename"]
-    target_language = args["target_language"]
-    source_language = args.get("source_language")
-    context = args.get("context")
-    sheets = set(args["sheets"]) if args.get("sheets") else None
+    # Validate arguments with Pydantic
+    validated = TranslateExcelArgs(**args)
+
+    sheets = set(validated.sheets) if validated.sheets else None
 
     # Decode and save input file
-    input_path = decode_file_to_temp(file_content_base64)
+    input_path = decode_file_to_temp(validated.file_content_base64)
 
     try:
         # Validate file has content
@@ -272,21 +497,21 @@ def tool_translate_excel(args: dict) -> MCPToolCallResult:
             )
 
         # Create output path
-        output_path = input_path.with_name(f"{input_path.stem}_{target_language}.xlsx")
+        output_path = input_path.with_name(f"{input_path.stem}_{validated.target_language}.xlsx")
 
         # Translate
         result = translate_file(
             input_file=input_path,
             output_file=output_path,
-            target_lang=target_language,
-            source_lang=source_language,
-            context=context,
+            target_lang=validated.target_language,
+            source_lang=validated.source_language,
+            context=validated.context,
             sheets=sheets,
         )
 
         # Encode output file
         output_base64 = encode_file_to_base64(output_path)
-        output_filename = filename.replace(".xlsx", f"_{target_language}.xlsx")
+        output_filename = validated.filename.replace(".xlsx", f"_{validated.target_language}.xlsx")
 
         # Cleanup output file
         output_path.unlink(missing_ok=True)
@@ -297,7 +522,7 @@ def tool_translate_excel(args: dict) -> MCPToolCallResult:
 - Cells translated: {result['cell_count']}
 - Rich text cells: {result.get('rich_text_cells', 0)}
 - Dropdowns translated: {result.get('dropdown_count', 0)}
-- Target language: {target_language}
+- Target language: {validated.target_language}
 
 **Output file:** {output_filename}
 **Base64 content:** (use this to save or send the file)
@@ -314,9 +539,10 @@ def tool_translate_excel(args: dict) -> MCPToolCallResult:
 
 def tool_get_sheets(args: dict) -> MCPToolCallResult:
     """Execute the get_excel_sheets tool."""
-    file_content_base64 = args["file_content_base64"]
+    # Validate arguments with Pydantic
+    validated = GetSheetsArgs(**args)
 
-    input_path = decode_file_to_temp(file_content_base64)
+    input_path = decode_file_to_temp(validated.file_content_base64)
 
     try:
         with ExcelExtractor(input_path) as extractor:
@@ -336,10 +562,11 @@ Found {len(sheets)} sheet(s):
 
 def tool_count_cells(args: dict) -> MCPToolCallResult:
     """Execute the count_translatable_cells tool."""
-    file_content_base64 = args["file_content_base64"]
-    sheets = set(args["sheets"]) if args.get("sheets") else None
+    # Validate arguments with Pydantic
+    validated = CountCellsArgs(**args)
+    sheets = set(validated.sheets) if validated.sheets else None
 
-    input_path = decode_file_to_temp(file_content_base64)
+    input_path = decode_file_to_temp(validated.file_content_base64)
 
     try:
         count = count_cells(input_path, sheets)
@@ -360,17 +587,17 @@ These are text cells that will be translated. Formulas, numbers, dates, and empt
 
 def tool_preview_cells(args: dict) -> MCPToolCallResult:
     """Execute the preview_cells tool."""
-    file_content_base64 = args["file_content_base64"]
-    limit = min(args.get("limit", 10), 50)
-    sheets = set(args["sheets"]) if args.get("sheets") else None
+    # Validate arguments with Pydantic
+    validated = PreviewCellsArgs(**args)
+    sheets = set(validated.sheets) if validated.sheets else None
 
-    input_path = decode_file_to_temp(file_content_base64)
+    input_path = decode_file_to_temp(validated.file_content_base64)
 
     try:
         with ExcelExtractor(input_path, sheets=sheets) as extractor:
             cells = []
             for i, cell in enumerate(extractor.extract_cells()):
-                if i >= limit:
+                if i >= validated.limit:
                     break
                 cells.append(cell)
 
@@ -402,10 +629,11 @@ def tool_preview_cells(args: dict) -> MCPToolCallResult:
 
 def tool_estimate_cost(args: dict) -> MCPToolCallResult:
     """Execute the estimate_translation_cost tool."""
-    file_content_base64 = args["file_content_base64"]
-    sheets = set(args["sheets"]) if args.get("sheets") else None
+    # Validate arguments with Pydantic
+    validated = EstimateCostArgs(**args)
+    sheets = set(validated.sheets) if validated.sheets else None
 
-    input_path = decode_file_to_temp(file_content_base64)
+    input_path = decode_file_to_temp(validated.file_content_base64)
 
     try:
         cell_count_val = count_cells(input_path, sheets)
@@ -488,6 +716,8 @@ async def mcp_list_tools() -> MCPToolsListResult:
 @router.post("/tools/call")
 async def mcp_call_tool(request: MCPToolCallRequest) -> MCPToolCallResult:
     """Execute an MCP tool."""
+    from pydantic import ValidationError
+
     tool_name = request.name
 
     if tool_name not in TOOL_HANDLERS:
@@ -499,6 +729,18 @@ async def mcp_call_tool(request: MCPToolCallRequest) -> MCPToolCallResult:
     try:
         handler = TOOL_HANDLERS[tool_name]
         return handler(request.arguments)
+    except ValidationError as e:
+        # Format Pydantic validation errors nicely
+        errors = []
+        for error in e.errors():
+            field = ".".join(str(loc) for loc in error["loc"])
+            msg = error["msg"]
+            errors.append(f"- {field}: {msg}")
+        error_text = "Validation failed:\n" + "\n".join(errors)
+        return MCPToolCallResult(
+            content=[MCPContentItem(text=error_text)],
+            isError=True
+        )
     except ValueError as e:
         return MCPToolCallResult(
             content=[MCPContentItem(text=f"Validation error: {str(e)}")],
