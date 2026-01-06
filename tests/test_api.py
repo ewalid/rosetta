@@ -91,12 +91,14 @@ class TestTranslateEndpoint:
         )
         assert response.status_code == 422
 
-    def test_invalid_file_type_returns_400(self, client):
+    @patch("rosetta.api.app.verify_recaptcha")
+    def test_invalid_file_type_returns_400(self, mock_verify, client):
         """POST /translate with non-Excel file should return 400."""
+        mock_verify.return_value = True  # Bypass reCAPTCHA for testing
         response = client.post(
             "/translate",
             files={"file": ("test.txt", b"Hello world")},
-            data={"target_lang": "french"},
+            data={"target_lang": "french", "recaptcha_token": "test-token"},
         )
         assert response.status_code == 400
         assert "Invalid file type" in response.json()["detail"]
@@ -111,26 +113,30 @@ class TestTranslateEndpoint:
         # FastAPI returns 422 for validation errors
         assert response.status_code in (400, 422)
 
-    def test_no_translatable_content_returns_400(self, client, empty_excel_bytes):
+    @patch("rosetta.api.app.verify_recaptcha")
+    def test_no_translatable_content_returns_400(self, mock_verify, client, empty_excel_bytes):
         """POST /translate with no text content should return 400."""
+        mock_verify.return_value = True  # Bypass reCAPTCHA for testing
         response = client.post(
             "/translate",
             files={"file": ("empty.xlsx", empty_excel_bytes)},
-            data={"target_lang": "french"},
+            data={"target_lang": "french", "recaptcha_token": "test-token"},
         )
         assert response.status_code == 400
         assert "No translatable content" in response.json()["detail"]
 
+    @patch("rosetta.api.app.verify_recaptcha")
     @patch("rosetta.api.app.translate_file")
-    def test_successful_translation(self, mock_translate, client, sample_excel_bytes):
+    def test_successful_translation(self, mock_translate, mock_verify, client, sample_excel_bytes):
         """POST /translate with valid file should return translated file."""
+        mock_verify.return_value = True  # Bypass reCAPTCHA for testing
         # Mock needs to create actual output file
         mock_translate.side_effect = create_mock_translate_file(sample_excel_bytes)
 
         response = client.post(
             "/translate",
             files={"file": ("test.xlsx", sample_excel_bytes)},
-            data={"target_lang": "french"},
+            data={"target_lang": "french", "recaptcha_token": "test-token"},
         )
 
         assert response.status_code == 200
@@ -138,15 +144,17 @@ class TestTranslateEndpoint:
         assert response.headers["x-cells-translated"] == "2"
         assert "test_french.xlsx" in response.headers.get("content-disposition", "")
 
+    @patch("rosetta.api.app.verify_recaptcha")
     @patch("rosetta.api.app.translate_file")
-    def test_translation_with_source_lang(self, mock_translate, client, sample_excel_bytes):
+    def test_translation_with_source_lang(self, mock_translate, mock_verify, client, sample_excel_bytes):
         """POST /translate with source_lang should pass it to translate_file."""
+        mock_verify.return_value = True  # Bypass reCAPTCHA for testing
         mock_translate.side_effect = create_mock_translate_file(sample_excel_bytes)
 
         response = client.post(
             "/translate",
             files={"file": ("test.xlsx", sample_excel_bytes)},
-            data={"target_lang": "french", "source_lang": "english"},
+            data={"target_lang": "french", "source_lang": "english", "recaptcha_token": "test-token"},
         )
 
         assert response.status_code == 200
@@ -154,9 +162,11 @@ class TestTranslateEndpoint:
         call_kwargs = mock_translate.call_args.kwargs
         assert call_kwargs["source_lang"] == "english"
 
+    @patch("rosetta.api.app.verify_recaptcha")
     @patch("rosetta.api.app.translate_file")
-    def test_translation_with_context(self, mock_translate, client, sample_excel_bytes):
+    def test_translation_with_context(self, mock_translate, mock_verify, client, sample_excel_bytes):
         """POST /translate with context should pass it to translate_file."""
+        mock_verify.return_value = True  # Bypass reCAPTCHA for testing
         mock_translate.side_effect = create_mock_translate_file(sample_excel_bytes)
 
         response = client.post(
@@ -165,6 +175,7 @@ class TestTranslateEndpoint:
             data={
                 "target_lang": "french",
                 "context": "Medical terminology",
+                "recaptcha_token": "test-token",
             },
         )
 
@@ -172,10 +183,12 @@ class TestTranslateEndpoint:
         call_kwargs = mock_translate.call_args.kwargs
         assert call_kwargs["context"] == "Medical terminology"
 
+    @patch("rosetta.api.app.verify_recaptcha")
     @patch("rosetta.api.app.count_cells")
     @patch("rosetta.api.app.translate_file")
-    def test_translation_with_sheets(self, mock_translate, mock_count, client, sample_excel_bytes):
+    def test_translation_with_sheets(self, mock_translate, mock_count, mock_verify, client, sample_excel_bytes):
         """POST /translate with sheets param should filter sheets."""
+        mock_verify.return_value = True  # Bypass reCAPTCHA for testing
         mock_count.return_value = 2  # Pretend we found cells
         mock_translate.side_effect = create_mock_translate_file(sample_excel_bytes)
 
@@ -185,6 +198,7 @@ class TestTranslateEndpoint:
             data={
                 "target_lang": "french",
                 "sheets": "Sheet1, Sheet2",
+                "recaptcha_token": "test-token",
             },
         )
 
@@ -192,15 +206,17 @@ class TestTranslateEndpoint:
         call_kwargs = mock_translate.call_args.kwargs
         assert call_kwargs["sheets"] == {"Sheet1", "Sheet2"}
 
+    @patch("rosetta.api.app.verify_recaptcha")
     @patch("rosetta.api.app.translate_file")
-    def test_translation_error_returns_500(self, mock_translate, client, sample_excel_bytes):
+    def test_translation_error_returns_500(self, mock_translate, mock_verify, client, sample_excel_bytes):
         """Translation errors should return 500."""
+        mock_verify.return_value = True  # Bypass reCAPTCHA for testing
         mock_translate.side_effect = Exception("API error")
 
         response = client.post(
             "/translate",
             files={"file": ("test.xlsx", sample_excel_bytes)},
-            data={"target_lang": "french"},
+            data={"target_lang": "french", "recaptcha_token": "test-token"},
         )
 
         assert response.status_code == 500
@@ -210,15 +226,17 @@ class TestTranslateEndpoint:
 class TestFileSizeLimits:
     """Tests for file size validation."""
 
-    def test_large_file_returns_400(self, client):
+    @patch("rosetta.api.app.verify_recaptcha")
+    def test_large_file_returns_400(self, mock_verify, client):
         """Files over 50MB should be rejected."""
+        mock_verify.return_value = True  # Bypass reCAPTCHA for testing
         # Create a file larger than 50MB
         large_content = b"x" * (51 * 1024 * 1024)
 
         response = client.post(
             "/translate",
             files={"file": ("large.xlsx", large_content)},
-            data={"target_lang": "french"},
+            data={"target_lang": "french", "recaptcha_token": "test-token"},
         )
 
         assert response.status_code == 400

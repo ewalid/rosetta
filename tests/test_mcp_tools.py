@@ -401,7 +401,8 @@ class TestToolEstimateCost:
         result = tool_estimate_cost(args)
 
         assert result.isError is False
-        assert "1000" in result.content[0].text
+        # Check for formatted number (1,000) or unformatted (1000)
+        assert "1,000" in result.content[0].text or "1000" in result.content[0].text
         assert "cost" in result.content[0].text.lower() or "estimate" in result.content[0].text.lower()
 
     @patch("rosetta.api.mcp.count_cells")

@@ -39,6 +39,7 @@ DANGEROUS_PATTERNS = [
     r"ignore\s+(previous|above|all)\s+instructions?",
     r"disregard\s+(previous|above|all)\s+instructions?",
     r"forget\s+(previous|above|all)\s+instructions?",
+    r"forget\s+all\s+previous\s+instructions?",  # Match "forget all previous instructions"
     r"new\s+instructions?:",
     r"system\s*:",
     r"assistant\s*:",
