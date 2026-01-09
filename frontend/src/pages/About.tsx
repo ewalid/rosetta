@@ -48,7 +48,7 @@ export function About() {
                 className="profile-intro"
               >
                 8 years in Tech, started as a full-stack software engineer at startups (Partoo, Gorgias)
-                then moved to enterprise software at Adobe and Radancy where I owned the full sales cycle
+                then moved to enterprise Solutions Engineering at Adobe and Radancy where I owned the full sales cycle
                 end to end. I built Rosetta to solve a real problem and to showcase what's possible when AI
                 meets structured data.
               </motion.p>
