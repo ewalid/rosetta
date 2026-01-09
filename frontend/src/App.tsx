@@ -34,7 +34,7 @@ function App() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="hero-subtitle"
               >
-                Formulas, formatting, and structure — preserved.
+                Formulas, formatting, structure. All preserved.
               </motion.p>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
