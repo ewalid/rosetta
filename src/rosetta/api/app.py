@@ -14,7 +14,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from openpyxl import load_workbook
 
 from rosetta.services.translation_service import count_cells, translate_file
-from .mcp import router as mcp_router
 
 # Load environment variables from .env file
 load_dotenv()
@@ -85,9 +84,6 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
-
-# Register MCP router
-app.include_router(mcp_router)
 
 
 @app.get("/")

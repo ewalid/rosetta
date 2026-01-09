@@ -66,7 +66,7 @@ export function AboutRosetta() {
           <h3 className="bento-card-title">Built for AI</h3>
           <p className="bento-card-text">
             Designed as infrastructure for AI. When ChatGPT, Claude, or any AI assistant needs
-            to translate Excel, Rosetta handles it safely via API or MCP.
+            to translate Excel, Rosetta handles it safely via API.
           </p>
         </motion.div>
 

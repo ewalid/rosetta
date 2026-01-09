@@ -102,6 +102,16 @@ rosetta patient_form.xlsx -t french -c "Medical intake form with clinical termin
 rosetta survey.xlsx -t japanese --sheets "Questions"
 ```
 
+## Using with AI Assistants
+
+Want AI assistants like Claude Desktop to translate Excel files for you automatically?
+
+Check out the **[Rosetta MCP Server](https://github.com/ewalid/rosetta-mcp-server)** - a Model Context Protocol server that exposes Rosetta's translation capabilities to any MCP-compatible AI assistant.
+
+**When to use each:**
+- **Rosetta CLI** (this project): When you want direct command-line control
+- **Rosetta MCP Server**: When you want AI assistants to handle translations through conversation
+
 ## Troubleshooting
 
 **"ANTHROPIC_API_KEY not set"**
