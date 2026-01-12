@@ -1,15 +1,21 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Shield, Zap, FileCheck } from 'lucide-react';
-import { Header, Footer } from './components/layout';
+import { Header, Footer, StickyCard } from './components/layout';
 import { TranslateForm } from './components/features/translate';
+import { FeedbackModal } from './components/features/feedback';
 import { useDarkMode } from './hooks';
 
 function App() {
   const [isDarkMode, toggleDarkMode] = useDarkMode();
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />
+
+      {/* Sticky Social Card */}
+      <StickyCard onFeedbackClick={() => setIsFeedbackOpen(true)} />
 
       <main className="flex-1 pt-16">
         {/* Hero Section */}
@@ -62,6 +68,7 @@ function App() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               className="max-w-3xl mx-auto"
+              data-upload-section
             >
               <TranslateForm />
             </motion.div>
@@ -86,6 +93,11 @@ function App() {
       </main>
 
       <Footer />
+
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+      />
     </div>
   );
 }
