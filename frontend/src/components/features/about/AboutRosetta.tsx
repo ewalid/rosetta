@@ -11,10 +11,8 @@ export function AboutRosetta() {
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
         className="about-section-title"
-      >
-        Why Rosetta Exists
-      </motion.h2>
-
+      />
+      
       {/* Bento Grid Layout */}
       <div className="bento-grid">
         {/* Row 1: Three equal cards - Problem, Result, Built for AI */}

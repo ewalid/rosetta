@@ -17,7 +17,7 @@ export function About() {
 
       <main className="flex-1 pt-16">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-gray-950 dark:via-gray-900 dark:to-emerald-950 py-20">
+        <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-gray-950 dark:via-gray-900 dark:to-emerald-950 pt-20 pb-10">
           {/* Animated background grid */}
           <div className="absolute inset-0 opacity-20">
             <div
@@ -53,8 +53,22 @@ export function About() {
         </section>
 
         {/* Meet the Builder Section */}
-        <section className="py-20 bg-white dark:bg-gray-950" id="builder">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-gray-950 dark:via-gray-900 dark:to-emerald-950 pt-10 pb-20" id="builder">
+          {/* Animated background grid */}
+          <div className="absolute inset-0 opacity-20">
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, rgb(16 185 129 / 0.1) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgb(16 185 129 / 0.1) 1px, transparent 1px)
+                `,
+                backgroundSize: '40px 40px'
+              }}
+            />
+          </div>
+
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
