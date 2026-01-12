@@ -34,7 +34,7 @@ export function ProfileHeader() {
               
               <div className="profile-badges">
                 <span className="profile-badge profile-badge-emerald">AI Enthusiast</span>
-                <span className="profile-badge profile-badge-teal">Research Scientist</span>
+                <span className="profile-badge profile-badge-teal">Pre-Sales Engineer</span>
                 <span className="profile-badge profile-badge-emerald">Full-Stack Developer</span>
               </div>
 
