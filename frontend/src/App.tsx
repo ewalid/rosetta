@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Shield, Zap, FileCheck } from 'lucide-react';
+import { Sparkles, Shield, Zap, FileCheck, Check, ArrowRight } from 'lucide-react';
 import { Header, Footer, StickyCard } from './components/layout';
 import { TranslateForm } from './components/features/translate';
 import { FeedbackModal } from './components/features/feedback';
@@ -88,6 +88,62 @@ function App() {
                 <Feature icon={FileCheck} text="Format Preserved" />
               </div>
             </motion.div>
+          </div>
+        </section>
+
+        {/* Features Grid */}
+        <section className="py-20 bg-white dark:bg-gray-950">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">
+                What Makes Rosetta Different?
+              </h2>
+              <p className="text-xl text-gray-600 dark:text-gray-400">
+                Translation that preserves your spreadsheet's integrity
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {['Preserves all formulas', 'Maintains formatting', 'Keeps dropdown menus', 'Retains structure', 'No data loss', 'Fast processing'].map((feature, index) => (
+                <motion.div
+                  key={feature}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="flex items-start gap-4 p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-900/30"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center">
+                    <Check className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white">{feature}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Your Excel files remain fully functional after translation
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 bg-gradient-to-br from-emerald-600 to-teal-600">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-4xl font-bold text-white mb-6">
+              Ready to translate your Excel files?
+            </h2>
+            <p className="text-xl text-emerald-100 mb-8">
+              Experience seamless translation that preserves everything you care about
+            </p>
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="inline-flex items-center gap-2 bg-white text-emerald-600 hover:bg-gray-100 px-8 py-4 text-lg font-medium rounded-lg shadow-lg hover:shadow-xl transition-all"
+            >
+              Get Started Now
+              <ArrowRight className="w-5 h-5" />
+            </button>
           </div>
         </section>
       </main>
