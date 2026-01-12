@@ -1,61 +1,73 @@
 import { motion } from 'framer-motion';
-import { MapPin, Linkedin, Github, Mail } from 'lucide-react';
+import { Linkedin, Github, Mail } from 'lucide-react';
 import './About.css';
 
 export function ProfileHeader() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      className="profile-header"
+      className="profile-card-wrapper"
     >
-      <div className="profile-avatar">
-        <img src="/walid.jpeg" alt="Walid El M'selmi" className="profile-avatar-img" />
-      </div>
+      <div className="profile-card-gradient">
+        <div className="profile-card">
+          <div className="profile-card-content">
+            <div className="profile-image-wrapper">
+              <div className="profile-image-glow" />
+              <img 
+                src="/walid.jpeg" 
+                alt="Walid El M'selmi" 
+                className="profile-image" 
+              />
+            </div>
+            
+            <div className="profile-card-info">
+              <h3 className="profile-card-name">Walid El M'selmi</h3>
+              <p className="profile-card-title">Solutions Engineer · Full-Stack Dev · AI Builder</p>
+              <p className="profile-card-description">
+                8 years in Tech, started as a full-stack software engineer at startups (Partoo, Gorgias)
+                then moved to enterprise Solutions Engineering at Adobe and Radancy where I owned the full sales cycle
+                end to end. I built Rosetta to solve a real problem and to showcase what's possible when AI
+                meets structured data.
+              </p>
+              
+              <div className="profile-badges">
+                <span className="profile-badge profile-badge-emerald">AI Enthusiast</span>
+                <span className="profile-badge profile-badge-teal">Research Scientist</span>
+                <span className="profile-badge profile-badge-emerald">Full-Stack Developer</span>
+              </div>
 
-      <div className="profile-info">
-        <h3 className="profile-name">Walid El M'selmi</h3>
-        <p className="profile-title">Solutions Engineer · Full-Stack Dev · AI Builder</p>
-        <div className="profile-meta">
-          <span className="profile-location">
-            <MapPin className="profile-meta-icon" />
-            Paris, France
-          </span>
-          <span className="profile-cta">Open to AI opportunities</span>
+              <div className="profile-card-buttons">
+                <a
+                  href="https://www.linkedin.com/in/walid-elmselmi/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="profile-button profile-button-primary"
+                >
+                  <Linkedin className="w-5 h-5" />
+                  LinkedIn
+                </a>
+                <a
+                  href="mailto:w.elmselmi@gmail.com"
+                  className="profile-button profile-button-secondary"
+                >
+                  <Mail className="w-5 h-5" />
+                  Contact
+                </a>
+                <a
+                  href="https://github.com/ewalid"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="profile-button profile-button-github"
+                >
+                  <Github className="w-5 h-5" />
+                  GitHub
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="profile-links">
-        <a
-          href="https://www.linkedin.com/in/walid-elmselmi/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="profile-link profile-link-linkedin"
-          aria-label="LinkedIn"
-        >
-          <Linkedin />
-          <span>LinkedIn</span>
-        </a>
-        <a
-          href="https://github.com/ewalid"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="profile-link profile-link-github"
-          aria-label="GitHub"
-        >
-          <Github />
-          <span>GitHub</span>
-        </a>
-        <a
-          href="mailto:w.elmselmi@gmail.com"
-          className="profile-link profile-link-email"
-          aria-label="Email"
-        >
-          <Mail />
-          <span>Email</span>
-        </a>
       </div>
     </motion.div>
   );

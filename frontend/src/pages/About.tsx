@@ -43,7 +43,7 @@ export function About() {
                 Why <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Rosetta</span> Exists
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-                Built to solve a real problem: translating complex Excel files without breaking them
+                Translating Excel files without breaking them
               </p>
             </motion.div>
 
@@ -70,19 +70,6 @@ export function About() {
             </motion.div>
 
             <ProfileHeader />
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-lg text-gray-600 dark:text-gray-400 max-w-4xl mx-auto text-center mb-16"
-            >
-              8 years in Tech, started as a full-stack software engineer at startups (Partoo, Gorgias)
-              then moved to enterprise Solutions Engineering at Adobe and Radancy where I owned the full sales cycle
-              end to end. I built Rosetta to solve a real problem and to showcase what's possible when AI
-              meets structured data.
-            </motion.p>
 
             <Timeline />
 

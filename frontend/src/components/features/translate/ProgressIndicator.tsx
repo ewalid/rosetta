@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { FileText, Languages, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FileText, Languages, CheckCircle2 } from 'lucide-react';
 import type { TranslateStatus } from '../../../types';
 import './Progress.css';
 
@@ -8,9 +8,24 @@ interface ProgressIndicatorProps {
 }
 
 const stages = [
-  { key: 'uploading', label: 'Uploading file', icon: FileText },
-  { key: 'translating', label: 'Translating content', icon: Languages },
-  { key: 'success', label: 'Complete', icon: CheckCircle },
+  { 
+    key: 'uploading' as const, 
+    label: 'Uploading file',
+    icon: FileText,
+    progress: 33
+  },
+  { 
+    key: 'translating' as const, 
+    label: 'Translating content',
+    icon: Languages,
+    progress: 66
+  },
+  { 
+    key: 'success' as const, 
+    label: 'Complete',
+    icon: CheckCircle2,
+    progress: 100
+  },
 ];
 
 export function ProgressIndicator({ status }: ProgressIndicatorProps) {
@@ -18,7 +33,9 @@ export function ProgressIndicator({ status }: ProgressIndicatorProps) {
     return null;
   }
 
+  const currentStage = stages.find(s => s.key === status) || stages[0];
   const currentIndex = stages.findIndex(s => s.key === status);
+  const progress = currentStage.progress;
 
   return (
     <motion.div
@@ -26,32 +43,39 @@ export function ProgressIndicator({ status }: ProgressIndicatorProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.4 }}
     >
-      {/* Progress bar */}
-      <div className="progress-bar-container">
+      {/* Elegant progress bar */}
+      <div className="progress-bar-wrapper">
         <div className="progress-bar-track">
           <motion.div
             className="progress-bar-fill"
             initial={{ width: '0%' }}
-            animate={{
-              width: status === 'uploading' ? '33%' : status === 'translating' ? '66%' : '100%',
-            }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
           />
-          {status === 'translating' && (
-            <motion.div
-              className="progress-bar-pulse"
-              animate={{
-                x: ['0%', '100%'],
-                opacity: [0.5, 0.8, 0.5],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            />
-          )}
+          <motion.div
+            className="progress-bar-shine"
+            animate={{
+              x: ['-100%', '200%'],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'linear',
+              repeatDelay: 0.5,
+            }}
+          />
+        </div>
+        <div className="progress-percentage">
+          <motion.span
+            key={progress}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            {progress}%
+          </motion.span>
         </div>
       </div>
 
@@ -63,30 +87,56 @@ export function ProgressIndicator({ status }: ProgressIndicatorProps) {
           const Icon = stage.icon;
 
           return (
-            <div
+            <motion.div
               key={stage.key}
               className={`progress-stage ${isActive ? 'active' : ''} ${isComplete ? 'complete' : ''}`}
+              initial={{ opacity: 0.4, y: 5 }}
+              animate={{ 
+                opacity: isActive || isComplete ? 1 : 0.4,
+                y: 0,
+              }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
             >
-              <div className="progress-stage-icon">
-                <Icon />
-              </div>
-              <span className="progress-stage-label">{stage.label}</span>
-            </div>
+              <motion.div
+                className="progress-stage-icon"
+                animate={isActive ? {
+                  scale: [1, 1.1, 1],
+                } : {}}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              >
+                <Icon size={18} strokeWidth={2.5} />
+              </motion.div>
+              <motion.span
+                className="progress-stage-label"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 + index * 0.1 }}
+              >
+                {stage.label}
+              </motion.span>
+            </motion.div>
           );
         })}
       </div>
 
-      {/* Estimated time hint */}
-      {status === 'translating' && (
-        <motion.p
-          className="progress-hint"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          Translation time depends on file size and content complexity
-        </motion.p>
-      )}
+      {/* Status hint */}
+      <AnimatePresence>
+        {status === 'translating' && (
+          <motion.p
+            className="progress-hint"
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ delay: 0.3 }}
+          >
+            Translation time depends on file size and content complexity
+          </motion.p>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

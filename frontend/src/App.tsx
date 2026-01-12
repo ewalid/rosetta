@@ -1,21 +1,15 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Shield, Zap, FileCheck, Check, ArrowRight } from 'lucide-react';
-import { Header, Footer, StickyCard } from './components/layout';
+import { Sparkles, Check, ArrowRight } from 'lucide-react';
+import { Header, Footer } from './components/layout';
 import { TranslateForm } from './components/features/translate';
-import { FeedbackModal } from './components/features/feedback';
 import { useDarkMode } from './hooks';
 
 function App() {
   const [isDarkMode, toggleDarkMode] = useDarkMode();
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />
-
-      {/* Sticky Social Card */}
-      <StickyCard onFeedbackClick={() => setIsFeedbackOpen(true)} />
 
       <main className="flex-1 pt-16">
         {/* Hero Section */}
@@ -63,31 +57,18 @@ function App() {
               </motion.div>
             </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="max-w-3xl mx-auto"
-              data-upload-section
-            >
-              <TranslateForm />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-12 text-center"
-            >
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                Supports XLSX files up to 50MB
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-6">
-                <Feature icon={Shield} text="Secure Processing" />
-                <Feature icon={Zap} text="Fast Translation" />
-                <Feature icon={FileCheck} text="Format Preserved" />
-              </div>
-            </motion.div>
+            {/* Translation Form */}
+            <div className="relative">
+              <motion.div
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="w-full max-w-3xl mx-auto"
+                data-upload-section
+              >
+                <TranslateForm />
+              </motion.div>
+            </div>
           </div>
         </section>
 
@@ -104,9 +85,16 @@ function App() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {['Preserves all formulas', 'Maintains formatting', 'Keeps dropdown menus', 'Retains structure', 'No data loss', 'Fast processing'].map((feature, index) => (
+              {[
+                { title: 'Preserves all formulas', description: 'Complex formulas stay intact and fully functional throughout translation' },
+                { title: 'Maintains formatting', description: 'Colors, fonts, and styles remain completely unchanged after processing' },
+                { title: 'Keeps dropdown menus', description: 'Data validation and dropdown menus work perfectly in translated files' },
+                { title: 'Retains structure', description: 'Sheet organization and layout are preserved exactly as original' },
+                { title: 'No data loss', description: 'Every cell and value translated accurately with zero information loss' },
+                { title: 'Fast processing', description: 'Quick translation without compromising quality or accuracy' }
+              ].map((feature, index) => (
                 <motion.div
-                  key={feature}
+                  key={feature.title}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -117,9 +105,9 @@ function App() {
                     <Check className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white">{feature}</h3>
+                    <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white">{feature.title}</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Your Excel files remain fully functional after translation
+                      {feature.description}
                     </p>
                   </div>
                 </motion.div>
@@ -149,20 +137,6 @@ function App() {
       </main>
 
       <Footer />
-
-      <FeedbackModal
-        isOpen={isFeedbackOpen}
-        onClose={() => setIsFeedbackOpen(false)}
-      />
-    </div>
-  );
-}
-
-function Feature({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
-  return (
-    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-      <Icon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-      <span>{text}</span>
     </div>
   );
 }
