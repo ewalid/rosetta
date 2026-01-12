@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Languages, Sparkles, Settings2, MessageSquare } from 'lucide-react';
+import { Languages, Settings2, MessageSquare } from 'lucide-react';
 import { Card, CardContent, Button, FileDropzone, Recaptcha, type RecaptchaRef } from '../../ui';
 import { LanguageSelector } from './LanguageSelector';
 import { SheetSelector } from './SheetSelector';
@@ -130,22 +130,6 @@ export function TranslateForm() {
     <Card>
       <CardContent>
         <div className="translate-form-content">
-          <div className="translate-form-header">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="translate-form-badge"
-            >
-              <Sparkles />
-              <span>Powered by Claude AI</span>
-            </motion.div>
-            <h2 className="translate-form-title">Translate Your Excel Files</h2>
-            <p className="translate-form-subtitle">
-              Upload your spreadsheet and select your target language
-            </p>
-          </div>
-
           <FileDropzone
             onFileSelect={handleFileSelect}
             selectedFile={selectedFile}
