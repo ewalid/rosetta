@@ -9,12 +9,14 @@ import requests
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from openpyxl import load_workbook
+import json
+import asyncio
 
 from rosetta.services.translation_service import count_cells, translate_file
-from .mcp import router as mcp_router
+from .mcp import router as mcp_router, COST_PER_1000_CELLS_USD
 
 # Load environment variables from .env file
 load_dotenv()
@@ -104,6 +106,83 @@ async def health() -> dict:
     validate the connection without heavy processing.
     """
     return {"status": "healthy"}
+
+
+@app.post("/estimate")
+async def estimate_cost(
+    file: UploadFile = File(..., description="Excel file to estimate translation cost for"),
+    sheets: Optional[str] = Form(None, description="Comma-separated sheet names (all if omitted)"),
+) -> dict:
+    """Estimate the cost and time for translating an Excel file.
+    
+    Returns cell count, estimated API cost, and estimated processing time.
+    """
+    # Validate file type
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No filename provided")
+
+    if not file.filename.lower().endswith((".xlsx", ".xlsm", ".xltx", ".xltm")):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid file type. Only Excel files (.xlsx, .xlsm, .xltx, .xltm) are supported",
+        )
+
+    # Read file content
+    content = await file.read()
+
+    # Check file size
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024 * 1024)}MB",
+        )
+
+    # Parse sheets parameter
+    sheets_set = None
+    if sheets:
+        sheets_set = {s.strip() for s in sheets.split(",") if s.strip()}
+
+    # Save to temp file for processing
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp_input:
+        tmp_input.write(content)
+        input_path = Path(tmp_input.name)
+
+    try:
+        # Count cells
+        cell_count = count_cells(input_path, sheets_set)
+        
+        if cell_count == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="No translatable content found in the file",
+            )
+
+        # Estimate cost
+        estimated_cost = (cell_count / 1000) * COST_PER_1000_CELLS_USD
+
+        # Estimate time (roughly 50 cells per second with batching)
+        estimated_seconds = cell_count / 50
+        if estimated_seconds < 60:
+            time_estimate_seconds = int(estimated_seconds)
+            time_estimate_display = f"{time_estimate_seconds} seconds"
+        else:
+            time_estimate_minutes = estimated_seconds / 60
+            time_estimate_seconds = int(estimated_seconds)
+            time_estimate_display = f"{time_estimate_minutes:.1f} minutes"
+
+        return {
+            "cell_count": cell_count,
+            "estimated_cost_usd": round(estimated_cost, 4),
+            "estimated_time_seconds": time_estimate_seconds,
+            "estimated_time_display": time_estimate_display,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Estimation failed: {str(e)}")
+    finally:
+        input_path.unlink(missing_ok=True)
 
 
 @app.post("/sheets")
@@ -257,7 +336,7 @@ async def translate(
         # Create output path
         output_path = input_path.with_name(f"{input_path.stem}_translated.xlsx")
 
-        # Translate
+        # Translate (without progress callback for now - can be added with SSE)
         result = translate_file(
             input_file=input_path,
             output_file=output_path,

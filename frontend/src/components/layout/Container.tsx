@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
-import { cn } from '../../lib/utils';
-import './Layout.css';
+import { cn } from '../ui/utils';
 
 interface ContainerProps {
   children: ReactNode;
@@ -8,9 +7,17 @@ interface ContainerProps {
   className?: string;
 }
 
+const sizeClasses = {
+  sm: 'max-w-2xl',
+  md: 'max-w-3xl',
+  lg: 'max-w-4xl',
+  xl: 'max-w-7xl',
+  full: 'max-w-full'
+};
+
 export function Container({ children, size = 'lg', className }: ContainerProps) {
   return (
-    <div className={cn('container', `container-${size}`, className)}>
+    <div className={cn('w-full mx-auto px-4 sm:px-6 lg:px-8', sizeClasses[size], className)}>
       {children}
     </div>
   );

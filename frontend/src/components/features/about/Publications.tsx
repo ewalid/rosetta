@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FileText, ExternalLink } from 'lucide-react';
+import { Award, ExternalLink } from 'lucide-react';
 import './About.css';
 
 const publications = [
@@ -44,7 +44,7 @@ export function Publications() {
             className="publication-card"
           >
             <div className="publication-icon">
-              <FileText />
+              <Award />
             </div>
             <div className="publication-content">
               <h4 className="publication-card-title">{pub.title}</h4>

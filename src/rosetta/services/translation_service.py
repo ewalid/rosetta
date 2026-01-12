@@ -1,7 +1,7 @@
 """High-level translation service for the API."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Callable
 
 from rosetta.core.config import Config
 from rosetta.models import TranslationBatch
@@ -16,6 +16,7 @@ def translate_file(
     context: Optional[str] = None,
     sheets: Optional[set[str]] = None,
     batch_size: int = 50,
+    progress_callback: Optional[Callable[[int, int, str], None]] = None,
 ) -> dict:
     """Translate an Excel file.
 
@@ -27,6 +28,8 @@ def translate_file(
         context: Additional context for translations
         sheets: Set of sheet names to translate (all if None)
         batch_size: Number of cells per API batch
+        progress_callback: Optional callback function(translated_count, total_count, stage)
+                          called during translation to report progress
 
     Returns:
         Dict with translation stats
@@ -53,6 +56,12 @@ def translate_file(
     if not cells:
         return {"cell_count": 0, "status": "no_content"}
 
+    total_cells = len(cells)
+    
+    # Report extraction complete
+    if progress_callback:
+        progress_callback(0, total_cells, "extracting")
+
     # Translate in batches
     translated_cells = []
     for i in range(0, len(cells), config.batch_size):
@@ -68,10 +77,16 @@ def translate_file(
         for cell, translation in zip(batch_cells, translations):
             cell.value = translation
             translated_cells.append(cell)
+        
+        # Report progress after each batch
+        if progress_callback:
+            progress_callback(len(translated_cells), total_cells, "translating")
 
     # Translate rich text runs
     rich_text_cells = [c for c in translated_cells if c.rich_text_runs]
     if rich_text_cells:
+        if progress_callback:
+            progress_callback(len(translated_cells), total_cells, "rich_text")
         _translate_rich_text_runs(
             rich_text_cells,
             translator,
@@ -84,6 +99,8 @@ def translate_file(
     # Translate dropdowns
     dropdowns = _extract_dropdown_validations(input_file, sheets)
     if dropdowns:
+        if progress_callback:
+            progress_callback(len(translated_cells), total_cells, "dropdowns")
         _translate_dropdowns(
             dropdowns,
             translator,
@@ -94,7 +111,12 @@ def translate_file(
         )
 
     # Write output
+    if progress_callback:
+        progress_callback(len(translated_cells), total_cells, "writing")
     write_translations(input_file, output_file, translated_cells, dropdowns)
+    
+    if progress_callback:
+        progress_callback(len(translated_cells), total_cells, "complete")
 
     return {
         "cell_count": len(translated_cells),

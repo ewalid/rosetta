@@ -1,13 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Languages, Sparkles, Settings2, MessageSquare } from 'lucide-react';
-import { Card, CardContent, Button, FileDropzone, Recaptcha, type RecaptchaRef } from '../../ui';
-import { LanguageSelector } from './LanguageSelector';
+import { Upload, FileSpreadsheet, Sparkles, ArrowRight, Shield, Settings2, MessageSquare, ChevronDown } from 'lucide-react';
+import { Button, Recaptcha, type RecaptchaRef } from '../../ui';
 import { SheetSelector } from './SheetSelector';
 import { ResultDisplay } from './ResultDisplay';
 import { ProgressIndicator } from './ProgressIndicator';
 import { useTranslate } from '../../../hooks/useTranslate';
 import { getSheets } from '../../../api/client';
+import { languages } from '../../../lib/languages';
 import type { FileInfo } from '../../../types';
 import './Translate.css';
 import './Progress.css';
@@ -21,6 +21,7 @@ export function TranslateForm() {
   const [selectedSheets, setSelectedSheets] = useState<string[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [loadingSheets, setLoadingSheets] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<RecaptchaRef>(null);
 
@@ -61,6 +62,46 @@ export function TranslateForm() {
       setRecaptchaToken(null);
     }
   }, [status, reset, selectedFile]);
+
+  // Handle drag and drop
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files[0];
+    if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+      const extension = file.name.split('.').pop()?.toLowerCase() as 'xlsx' | 'xlsm' | 'xltx' | 'xltm' | undefined;
+      handleFileSelect({
+        file,
+        name: file.name,
+        size: `${(file.size / 1024).toFixed(2)} KB`,
+        type: extension || 'xlsx'
+      });
+    }
+  }, [handleFileSelect]);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const extension = file.name.split('.').pop()?.toLowerCase() as 'xlsx' | 'xlsm' | 'xltx' | 'xltm' | undefined;
+      handleFileSelect({
+        file,
+        name: file.name,
+        size: `${(file.size / 1024).toFixed(2)} KB`,
+        type: extension || 'xlsx'
+      });
+    }
+  }, [handleFileSelect]);
 
   const isTranslating = status === 'uploading' || status === 'translating';
   const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
@@ -127,155 +168,240 @@ export function TranslateForm() {
   const canTranslate = selectedFile && targetLanguage && !isTranslating;
 
   return (
-    <Card>
-      <CardContent>
-        <div className="translate-form-content">
-          <div className="translate-form-header">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="translate-form-badge"
-            >
-              <Sparkles />
-              <span>Powered by Claude AI</span>
-            </motion.div>
-            <h2 className="translate-form-title">Translate Your Excel Files</h2>
-            <p className="translate-form-subtitle">
-              Upload your spreadsheet and select your target language
-            </p>
-          </div>
+    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <div className="p-8">
+        <h2 className="text-2xl font-semibold mb-6 text-center text-gray-900 dark:text-white">
+          Translate Your Excel Files
+        </h2>
 
-          <FileDropzone
-            onFileSelect={handleFileSelect}
-            selectedFile={selectedFile}
+        {/* File Upload Area */}
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`relative border-2 border-dashed rounded-xl p-12 transition-all cursor-pointer ${
+            isDragging
+              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20'
+              : 'border-gray-300 dark:border-gray-700 hover:border-emerald-400 dark:hover:border-emerald-600'
+          }`}
+        >
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleFileChange}
             disabled={isTranslating}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           />
 
-          <div className="translate-form-languages">
-            <LanguageSelector
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 mb-4">
+              {selectedFile ? (
+                <FileSpreadsheet className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <Upload className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+              )}
+            </div>
+
+            {selectedFile ? (
+              <div>
+                <p className="font-medium text-gray-900 dark:text-gray-100 mb-1">
+                  {selectedFile.name}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {selectedFile.size}
+                </p>
+              </div>
+            ) : (
+              <div>
+                <p className="font-medium text-gray-900 dark:text-gray-100 mb-1">
+                  Drag and drop your Excel file
+                </p>
+                <p className="text-sm text-gray-500">
+                  or click to browse (XLSX, XLS supported)
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Language Selection */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              Source Language
+            </label>
+            <select
               value={sourceLanguage}
-              onChange={setSourceLanguage}
-              label="Source Language"
-              includeAutoDetect
+              onChange={(e) => setSourceLanguage(e.target.value)}
               disabled={isTranslating}
-            />
-            <LanguageSelector
-              value={targetLanguage}
-              onChange={setTargetLanguage}
-              label="Target Language"
-              disabled={isTranslating}
-            />
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">Auto-detect</option>
+              {languages.map(lang => (
+                <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
+              ))}
+            </select>
           </div>
 
-          {/* Advanced Options - only show when file is selected */}
-          {selectedFile && (
-            <div className="translate-advanced-options">
-              <button
-                type="button"
-                className="translate-advanced-header"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-              >
-                <Settings2 />
-                <span>Advanced Options</span>
-                <motion.span
-                  animate={{ rotate: showAdvanced ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                  style={{ marginLeft: 'auto' }}
-                >
-                  ▼
-                </motion.span>
-              </button>
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              Target Language
+            </label>
+            <select
+              value={targetLanguage}
+              onChange={(e) => setTargetLanguage(e.target.value)}
+              disabled={isTranslating}
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">Select language</option>
+              {languages.map(lang => (
+                <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-              <AnimatePresence>
-                {showAdvanced && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="translate-advanced-content"
-                  >
+        {/* Advanced Options - only show when file is selected */}
+        {selectedFile && (
+          <div className="mt-6">
+            <motion.button
+              type="button"
+              className="flex items-center gap-2 w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <motion.div
+                animate={{ rotate: showAdvanced ? 90 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Settings2 className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
+              </motion.div>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                Advanced Options
+              </span>
+              <motion.span
+                animate={{ rotate: showAdvanced ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="ml-auto text-gray-500 dark:text-gray-400"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </motion.span>
+            </motion.button>
+
+            <AnimatePresence>
+              {showAdvanced && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0, y: -10 }}
+                  animate={{ height: 'auto', opacity: 1, y: 0 }}
+                  exit={{ height: 0, opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  className="mt-4 overflow-hidden"
+                >
+                  <div className="bg-gradient-to-br from-emerald-50/50 via-white to-teal-50/50 dark:from-emerald-950/10 dark:via-gray-900 dark:to-teal-950/10 border border-emerald-100 dark:border-emerald-900/30 rounded-xl p-6 space-y-6 shadow-sm">
                     {/* Sheet Selector */}
                     {sheets.length > 1 && (
-                      <SheetSelector
-                        sheets={sheets}
-                        selectedSheets={selectedSheets}
-                        onChange={setSelectedSheets}
-                        disabled={isTranslating || loadingSheets}
-                      />
+                      <div className="space-y-2">
+                        <SheetSelector
+                          sheets={sheets}
+                          selectedSheets={selectedSheets}
+                          onChange={setSelectedSheets}
+                          disabled={isTranslating || loadingSheets}
+                        />
+                      </div>
                     )}
 
                     {/* Context Input */}
-                    <div className="context-input">
-                      <label className="context-input-label">
-                        <MessageSquare className="context-input-label-icon" />
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         Context for AI
-                        <span className="context-input-optional">(optional)</span>
+                        <span className="text-xs font-normal text-gray-500 dark:text-gray-400">(optional)</span>
                       </label>
                       <textarea
-                        className="context-input-textarea"
+                        className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 min-h-[120px] disabled:opacity-50 disabled:cursor-not-allowed transition-all resize-none"
                         value={context}
                         onChange={(e) => setContext(e.target.value)}
                         placeholder="e.g., This is a financial report, use formal language. Technical terms should remain in English."
                         disabled={isTranslating}
                       />
-                      <p className="context-input-hint">
-                        Help the AI understand your document better for more accurate translations.
+                      <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                        Provide domain-specific context to help the AI understand your document better for more accurate translations.
                       </p>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {/* Invisible reCAPTCHA - hidden but always rendered when site key is available */}
+        {recaptchaSiteKey && (
+          <div style={{ display: 'none' }}>
+            <Recaptcha
+              ref={recaptchaRef}
+              siteKey={recaptchaSiteKey}
+              onChange={handleRecaptchaChange}
+            />
+          </div>
+        )}
+
+        {/* Translate Button */}
+        <Button
+          disabled={!canTranslate || isTranslating}
+          onClick={handleTranslate}
+          className="w-full mt-6 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white py-6 text-lg font-medium rounded-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isTranslating ? (
+            <>
+              {status === 'uploading' ? 'Uploading...' : 'Translating...'}
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-5 h-5" />
+              Translate File
+              <ArrowRight className="w-5 h-5" />
+            </>
           )}
+        </Button>
 
-          {/* Invisible reCAPTCHA - hidden but always rendered when site key is available */}
-          {recaptchaSiteKey && (
-            <div className="recaptcha-wrapper recaptcha-invisible-wrapper">
-              <Recaptcha
-                ref={recaptchaRef}
-                siteKey={recaptchaSiteKey}
-                onChange={handleRecaptchaChange}
-              />
-            </div>
-          )}
+        <p className="text-center text-sm text-gray-500 mt-4">
+          Supports files up to 50MB
+        </p>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Button
-              variant="primary"
-              size="lg"
-              className="translate-form-button"
-              onClick={handleTranslate}
-              disabled={!canTranslate}
-              isLoading={isTranslating}
-              leftIcon={!isTranslating ? <Languages /> : undefined}
-            >
-              {isTranslating
-                ? status === 'uploading'
-                  ? 'Uploading...'
-                  : 'Translating...'
-                : 'Translate File'}
-            </Button>
-          </motion.div>
+        {/* Progress Indicator */}
+        <AnimatePresence>
+          {isTranslating && <ProgressIndicator status={status} />}
+        </AnimatePresence>
 
-          <AnimatePresence>
-            {isTranslating && <ProgressIndicator status={status} />}
-          </AnimatePresence>
+        {/* Result Display */}
+        <ResultDisplay
+          status={status}
+          filename={filename}
+          error={error}
+          onDownload={downloadResult}
+          onRetry={handleRetry}
+        />
+      </div>
 
-          <ResultDisplay
-            status={status}
-            filename={filename}
-            error={error}
-            onDownload={downloadResult}
-            onRetry={handleRetry}
-          />
+      {/* Features Bar */}
+      <div className="bg-gray-50 dark:bg-gray-800/50 px-8 py-4 border-t border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-center gap-8 flex-wrap">
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>Secure Processing</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>Fast Translation</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>Format Preserved</span>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

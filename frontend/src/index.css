@@ -1,47 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import './styles/tailwind.css';
+@import './styles/theme.css';
 
 @layer base {
-  :root {
-    /* Color palette */
-    --color-neutral-50: #FAFAFA;
-    --color-neutral-100: #F5F5F5;
-    --color-neutral-200: #E5E5E5;
-    --color-neutral-300: #D4D4D4;
-    --color-neutral-400: #A3A3A3;
-    --color-neutral-500: #737373;
-    --color-neutral-600: #525252;
-    --color-neutral-700: #404040;
-    --color-neutral-800: #262626;
-    --color-neutral-900: #171717;
-    --color-neutral-950: #0A0A0A;
-
-    /* Accent color - emerald green */
-    --color-accent-50: #ECFDF5;
-    --color-accent-100: #D1FAE5;
-    --color-accent-200: #A7F3D0;
-    --color-accent-300: #6EE7B7;
-    --color-accent-400: #34D399;
-    --color-accent-500: #10B981;
-    --color-accent-600: #059669;
-    --color-accent-700: #047857;
-    --color-accent-800: #065F46;
-    --color-accent-900: #064E3B;
-    --color-accent-950: #022C22;
-  }
-
   body {
-    background-color: var(--color-neutral-50);
-    color: var(--color-neutral-900);
     font-family: 'Space Grotesk', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-  }
-
-  :root.dark body {
-    background-color: var(--color-neutral-950);
-    color: var(--color-neutral-50);
   }
 }
 
@@ -69,27 +33,27 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--color-neutral-300);
+  background-color: rgb(212 212 212);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-neutral-400);
+  background-color: rgb(163 163 163);
 }
 
-:root.dark ::-webkit-scrollbar-thumb {
-  background-color: var(--color-neutral-700);
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgb(64 64 64);
 }
 
-:root.dark ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-neutral-600);
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(82 82 82);
 }
 
 /* Selection */
 ::selection {
-  background-color: var(--color-accent-200);
+  background-color: rgb(167 243 208);
 }
 
-:root.dark ::selection {
-  background-color: var(--color-accent-800);
+.dark ::selection {
+  background-color: rgb(6 95 70);
 }

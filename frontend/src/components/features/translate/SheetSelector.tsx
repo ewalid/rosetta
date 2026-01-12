@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Check, Layers } from 'lucide-react';
+import { ChevronDown, Layers, CheckSquare, Square } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import './Translate.css';
 
@@ -54,8 +54,11 @@ export function SheetSelector({
     if (selectedSheets.length === 1) {
       return selectedSheets[0];
     }
-    return `${selectedSheets.length} sheets selected`;
+    return `${selectedSheets.length} of ${sheets.length} sheets`;
   };
+
+  const allSelected = selectedSheets.length === sheets.length;
+  const someSelected = selectedSheets.length > 0 && selectedSheets.length < sheets.length;
 
   return (
     <div className="sheet-selector" ref={dropdownRef}>
@@ -65,11 +68,13 @@ export function SheetSelector({
         <span className="sheet-selector-optional">(optional)</span>
       </label>
 
-      <button
+      <motion.button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={cn('sheet-selector-trigger', disabled && 'sheet-selector-disabled')}
+        whileHover={!disabled ? { scale: 1.01 } : {}}
+        whileTap={!disabled ? { scale: 0.99 } : {}}
       >
         <span className="sheet-selector-value">{getDisplayText()}</span>
         <motion.div
@@ -78,7 +83,7 @@ export function SheetSelector({
         >
           <ChevronDown className="sheet-selector-chevron" />
         </motion.div>
-      </button>
+      </motion.button>
 
       <AnimatePresence>
         {isOpen && (
@@ -86,37 +91,66 @@ export function SheetSelector({
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             className="sheet-selector-menu"
           >
-            <button
+            <motion.button
               type="button"
               onClick={handleSelectAll}
               className="sheet-selector-option sheet-selector-select-all"
+              whileHover={{ backgroundColor: 'rgba(16, 185, 129, 0.05)' }}
+              whileTap={{ scale: 0.98 }}
             >
-              <span className="sheet-selector-option-content">
-                {selectedSheets.length === sheets.length || selectedSheets.length === 0
-                  ? 'Deselect All'
-                  : 'Select All'}
-              </span>
-            </button>
-            <div className="sheet-selector-divider" />
-            {sheets.map((sheet) => (
-              <button
-                key={sheet}
-                type="button"
-                onClick={() => handleToggleSheet(sheet)}
-                className={cn(
-                  'sheet-selector-option',
-                  selectedSheets.includes(sheet) && 'sheet-selector-option-selected'
-                )}
+              <motion.div
+                animate={{ scale: allSelected ? [1, 1.1, 1] : 1 }}
+                transition={{ duration: 0.2 }}
               >
-                <span className="sheet-selector-checkbox">
-                  {selectedSheets.includes(sheet) && <Check />}
-                </span>
-                <span className="sheet-selector-option-content">{sheet}</span>
-              </button>
-            ))}
+                {allSelected ? (
+                  <CheckSquare className="sheet-selector-checkbox-icon" />
+                ) : someSelected ? (
+                  <div className="sheet-selector-checkbox-indeterminate" />
+                ) : (
+                  <Square className="sheet-selector-checkbox-icon" />
+                )}
+              </motion.div>
+              <span className="sheet-selector-option-content">
+                {allSelected ? 'Deselect All' : 'Select All'}
+              </span>
+            </motion.button>
+            <div className="sheet-selector-divider" />
+            {sheets.map((sheet, index) => {
+              const isSelected = selectedSheets.includes(sheet);
+              return (
+                <motion.button
+                  key={sheet}
+                  type="button"
+                  onClick={() => handleToggleSheet(sheet)}
+                  className={cn(
+                    'sheet-selector-option',
+                    isSelected && 'sheet-selector-option-selected'
+                  )}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                  whileHover={{ backgroundColor: 'rgba(16, 185, 129, 0.05)', x: 2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <motion.div
+                    animate={{ 
+                      scale: isSelected ? [1, 1.2, 1] : 1,
+                    }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {isSelected ? (
+                      <CheckSquare className="sheet-selector-checkbox-icon sheet-selector-checkbox-checked" />
+                    ) : (
+                      <Square className="sheet-selector-checkbox-icon" />
+                    )}
+                  </motion.div>
+                  <span className="sheet-selector-option-content">{sheet}</span>
+                </motion.button>
+              );
+            })}
           </motion.div>
         )}
       </AnimatePresence>
