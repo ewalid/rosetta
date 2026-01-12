@@ -207,9 +207,21 @@
   text-align: center;
 }
 
+.result-button {
+  background: linear-gradient(to right, #10b981, #059669) !important;
+  border-color: #10b981 !important;
+  color: white !important;
+}
+
+.result-button:hover {
+  background: linear-gradient(to right, #059669, #047857) !important;
+  border-color: #059669 !important;
+}
+
 .result-button svg {
   width: 1.25rem;
   height: 1.25rem;
+  color: white !important;
 }
 
 /* Advanced Options */
