@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileSpreadsheet, Sparkles, ArrowRight, Shield, Settings2, MessageSquare, ChevronDown } from 'lucide-react';
-import { Button, Recaptcha, type RecaptchaRef } from '../../ui';
+import { Button, Recaptcha, FloatingFeedbackButton, type RecaptchaRef } from '../../ui';
 import { SheetSelector } from './SheetSelector';
 import { ResultDisplay } from './ResultDisplay';
 import { ProgressIndicator } from './ProgressIndicator';
@@ -24,6 +24,7 @@ export function TranslateForm() {
   const [isDragging, setIsDragging] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<RecaptchaRef>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { status, error, filename, translate, downloadResult, reset } = useTranslate();
 
@@ -168,7 +169,8 @@ export function TranslateForm() {
   const canTranslate = selectedFile && targetLanguage && !isTranslating;
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+    <div ref={containerRef} className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden relative">
+      <FloatingFeedbackButton containerRef={containerRef} />
       <div className="p-8">
         <h2 className="text-2xl font-semibold mb-6 text-center text-gray-900 dark:text-white">
           Translate Your Excel Files

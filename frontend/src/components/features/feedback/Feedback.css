@@ -23,7 +23,7 @@
 
 :root.dark .feedback-modal {
   background: var(--color-neutral-800);
-  border: 1px solid var(--color-neutral-700);
+  border: 1px solid #10b981;
 }
 
 .feedback-close {
@@ -201,8 +201,8 @@
 .feedback-textarea {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: white;
-  border: 1px solid var(--color-neutral-300);
+  background: var(--color-neutral-100);
+  border: 1px solid #10b981;
   border-radius: 0.75rem;
   font-size: 0.9375rem;
   font-family: inherit;
@@ -213,8 +213,8 @@
 }
 
 :root.dark .feedback-textarea {
-  background: var(--color-neutral-700);
-  border-color: var(--color-neutral-600);
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid #10b981;
   color: white;
 }
 
