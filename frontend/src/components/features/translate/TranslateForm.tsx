@@ -1,14 +1,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, FileSpreadsheet, Sparkles, ArrowRight, Shield, Settings2, MessageSquare, ChevronDown } from 'lucide-react';
+import { Upload, FileSpreadsheet, Sparkles, ArrowRight, Shield, Settings2, MessageSquare, ChevronDown, Grid3X3 } from 'lucide-react';
 import { Button, Recaptcha, FloatingFeedbackButton, type RecaptchaRef } from '../../ui';
 import { SheetSelector } from './SheetSelector';
 import { ResultDisplay } from './ResultDisplay';
 import { ProgressIndicator } from './ProgressIndicator';
 import { useTranslate } from '../../../hooks/useTranslate';
-import { getSheets } from '../../../api/client';
+import { getSheets, getEstimate } from '../../../api/client';
 import { languages } from '../../../lib/languages';
-import type { FileInfo } from '../../../types';
+import type { FileInfo, EstimateResult } from '../../../types';
 import './Translate.css';
 import './Progress.css';
 
@@ -21,12 +21,14 @@ export function TranslateForm() {
   const [selectedSheets, setSelectedSheets] = useState<string[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [loadingSheets, setLoadingSheets] = useState(false);
+  const [estimate, setEstimate] = useState<EstimateResult | null>(null);
+  const [loadingEstimate, setLoadingEstimate] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<RecaptchaRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { status, error, filename, translate, downloadResult, reset } = useTranslate();
+  const { status, error, filename, progress, translate, downloadResult, reset } = useTranslate();
 
   // Fetch sheets when file is selected
   useEffect(() => {
@@ -34,6 +36,7 @@ export function TranslateForm() {
       if (!selectedFile) {
         setSheets([]);
         setSelectedSheets([]);
+        setEstimate(null);
         return;
       }
 
@@ -51,6 +54,34 @@ export function TranslateForm() {
 
     fetchSheets();
   }, [selectedFile]);
+
+  // Fetch estimate when file or selected sheets change
+  useEffect(() => {
+    async function fetchEstimate() {
+      if (!selectedFile) {
+        setEstimate(null);
+        return;
+      }
+
+      // Wait for sheets to be loaded before fetching estimate
+      if (loadingSheets) return;
+
+      setLoadingEstimate(true);
+      const sheetsToEstimate = selectedSheets.length > 0 && selectedSheets.length < sheets.length
+        ? selectedSheets
+        : undefined;
+      const response = await getEstimate(selectedFile.file, sheetsToEstimate);
+      setLoadingEstimate(false);
+
+      if (response.success && response.estimate) {
+        setEstimate(response.estimate);
+      } else {
+        setEstimate(null);
+      }
+    }
+
+    fetchEstimate();
+  }, [selectedFile, selectedSheets, sheets.length, loadingSheets]);
 
   const handleFileSelect = useCallback((fileInfo: FileInfo | null) => {
     setSelectedFile(fileInfo);
@@ -328,7 +359,7 @@ export function TranslateForm() {
                         disabled={isTranslating}
                       />
                       <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                        Provide domain-specific context to help the AI understand your document better for more accurate translations.
+                        Provide domain-specific context for more accurate translations.
                       </p>
                     </div>
                   </div>
@@ -368,13 +399,31 @@ export function TranslateForm() {
           )}
         </Button>
 
+        {/* Estimation Display */}
+        {selectedFile && (estimate || loadingEstimate) && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 flex items-center justify-center gap-6 text-sm"
+          >
+            {loadingEstimate ? (
+              <span className="text-gray-500 dark:text-gray-400">Analyzing file...</span>
+            ) : estimate ? (
+              <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                <Grid3X3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>{estimate.cellCount.toLocaleString()} cells to translate</span>
+              </div>
+            ) : null}
+          </motion.div>
+        )}
+
         <p className="text-center text-sm text-gray-500 mt-4">
           Supports files up to 50MB
         </p>
 
         {/* Progress Indicator */}
         <AnimatePresence>
-          {isTranslating && <ProgressIndicator status={status} />}
+          {isTranslating && <ProgressIndicator status={status} progress={progress} />}
         </AnimatePresence>
 
         {/* Result Display */}

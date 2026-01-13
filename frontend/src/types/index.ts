@@ -46,3 +46,23 @@ export interface FeedbackResponse {
   message?: string;
   error?: string;
 }
+
+export interface EstimateResult {
+  cellCount: number;
+  estimatedCostUsd: number;
+  estimatedTimeSeconds: number;
+  estimatedTimeDisplay: string;
+}
+
+export interface EstimateResponse {
+  success: boolean;
+  estimate?: EstimateResult;
+  error?: string;
+}
+
+export interface TranslationProgress {
+  translated: number;
+  total: number;
+  percentage: number;
+  stage: string;
+}

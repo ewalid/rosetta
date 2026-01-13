@@ -1,41 +1,83 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Languages, CheckCircle2 } from 'lucide-react';
-import type { TranslateStatus } from '../../../types';
+import type { TranslateStatus, TranslationProgress } from '../../../types';
 import './Progress.css';
 
 interface ProgressIndicatorProps {
   status: TranslateStatus;
+  progress?: TranslationProgress | null;
 }
 
 const stages = [
-  { 
-    key: 'uploading' as const, 
+  {
+    key: 'uploading' as const,
     label: 'Uploading file',
     icon: FileText,
-    progress: 33
+    baseProgress: 10
   },
-  { 
-    key: 'translating' as const, 
+  {
+    key: 'translating' as const,
     label: 'Translating content',
     icon: Languages,
-    progress: 66
+    baseProgress: 50
   },
-  { 
-    key: 'success' as const, 
+  {
+    key: 'success' as const,
     label: 'Complete',
     icon: CheckCircle2,
-    progress: 100
+    baseProgress: 100
   },
 ];
 
-export function ProgressIndicator({ status }: ProgressIndicatorProps) {
+function getStageLabel(stage: string): string {
+  switch (stage) {
+    case 'extracting':
+      return 'Extracting cells...';
+    case 'translating':
+      return 'Translating...';
+    case 'rich_text':
+      return 'Processing rich text...';
+    case 'dropdowns':
+      return 'Translating dropdowns...';
+    case 'writing':
+      return 'Writing file...';
+    case 'complete':
+      return 'Complete!';
+    default:
+      return 'Processing...';
+  }
+}
+
+export function ProgressIndicator({ status, progress }: ProgressIndicatorProps) {
   if (status === 'idle' || status === 'error') {
     return null;
   }
 
-  const currentStage = stages.find(s => s.key === status) || stages[0];
+  // Calculate progress percentage
+  let displayProgress: number;
+  if (status === 'uploading') {
+    displayProgress = 5;
+  } else if (status === 'translating' && progress) {
+    // Map the translation progress (0-100) to 10-95 range
+    displayProgress = Math.max(10, Math.min(95, 10 + (progress.percentage * 0.85)));
+  } else if (status === 'success') {
+    displayProgress = 100;
+  } else {
+    displayProgress = 10;
+  }
+
   const currentIndex = stages.findIndex(s => s.key === status);
-  const progress = currentStage.progress;
+
+  // Build the label for translating status
+  let translatingLabel = 'Translating content';
+  if (status === 'translating' && progress) {
+    const stageText = getStageLabel(progress.stage);
+    if (progress.total > 0) {
+      translatingLabel = `${stageText} ${progress.translated}/${progress.total} cells`;
+    } else {
+      translatingLabel = stageText;
+    }
+  }
 
   return (
     <motion.div
@@ -51,8 +93,8 @@ export function ProgressIndicator({ status }: ProgressIndicatorProps) {
           <motion.div
             className="progress-bar-fill"
             initial={{ width: '0%' }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+            animate={{ width: `${displayProgress}%` }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
           />
           <motion.div
             className="progress-bar-shine"
@@ -69,12 +111,12 @@ export function ProgressIndicator({ status }: ProgressIndicatorProps) {
         </div>
         <div className="progress-percentage">
           <motion.span
-            key={progress}
+            key={Math.round(displayProgress)}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
-            {progress}%
+            {Math.round(displayProgress)}%
           </motion.span>
         </div>
       </div>
@@ -86,12 +128,15 @@ export function ProgressIndicator({ status }: ProgressIndicatorProps) {
           const isComplete = index < currentIndex || status === 'success';
           const Icon = stage.icon;
 
+          // Use dynamic label for translating stage
+          const label = stage.key === 'translating' && isActive ? translatingLabel : stage.label;
+
           return (
             <motion.div
               key={stage.key}
               className={`progress-stage ${isActive ? 'active' : ''} ${isComplete ? 'complete' : ''}`}
               initial={{ opacity: 0.4, y: 5 }}
-              animate={{ 
+              animate={{
                 opacity: isActive || isComplete ? 1 : 0.4,
                 y: 0,
               }}
@@ -116,7 +161,7 @@ export function ProgressIndicator({ status }: ProgressIndicatorProps) {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 + index * 0.1 }}
               >
-                {stage.label}
+                {label}
               </motion.span>
             </motion.div>
           );
@@ -125,7 +170,7 @@ export function ProgressIndicator({ status }: ProgressIndicatorProps) {
 
       {/* Status hint */}
       <AnimatePresence>
-        {status === 'translating' && (
+        {status === 'translating' && !progress && (
           <motion.p
             className="progress-hint"
             initial={{ opacity: 0, y: -5 }}
