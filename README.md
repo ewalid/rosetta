@@ -125,6 +125,52 @@ rosetta survey.xlsx -t japanese --sheets "Questions"
 
 Your original file is never modified.
 
+## Web App & API
+
+Rosetta also includes a web application and REST API for browser-based translations.
+
+### Running the API server
+
+```bash
+# Install with uv (recommended)
+uv sync
+
+# Start the server
+uv run uvicorn rosetta.api:app --reload
+
+# Or with pip
+pip install -e .
+uvicorn rosetta.api:app --reload
+```
+
+The API runs at `http://localhost:8000` by default.
+
+### Running the frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend runs at `http://localhost:5173` and connects to the API.
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/translate` | POST | Translate an Excel file (returns file) |
+| `/translate-stream` | POST | Translate with real-time progress via SSE |
+| `/estimate` | POST | Get cell count and cost estimate |
+| `/sheets` | POST | List sheet names in a file |
+| `/count` | POST | Count translatable cells |
+| `/preview` | POST | Preview cells that will be translated |
+| `/health` | GET | Health check |
+
+### Real-time Progress
+
+The `/translate-stream` endpoint uses Server-Sent Events (SSE) to stream translation progress in real-time. The frontend automatically falls back to the standard `/translate` endpoint on networks that don't support SSE (e.g., corporate proxies).
+
 ## Requirements
 
 - Python 3.11+
