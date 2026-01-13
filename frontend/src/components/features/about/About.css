@@ -719,13 +719,13 @@
 
 .experience-card-company {
   font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--color-neutral-600);
+  font-weight: 600;
+  color: var(--color-neutral-900);
   margin-bottom: 0.75rem;
 }
 
 :root.dark .experience-card-company {
-  color: #94a3b8;
+  color: white;
 }
 
 .experience-card-description {
