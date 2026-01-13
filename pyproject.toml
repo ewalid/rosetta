@@ -33,6 +33,7 @@ dependencies = [
     "uvicorn>=0.32.0",
     "python-multipart>=0.0.12",
     "requests>=2.31.0",
+    "sse-starlette>=2.0.0",
 ]
 
 [project.optional-dependencies]

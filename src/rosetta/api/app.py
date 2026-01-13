@@ -2,6 +2,9 @@
 
 import os
 import tempfile
+import base64
+import queue
+import threading
 from pathlib import Path
 from typing import Optional
 
@@ -11,11 +14,13 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from sse_starlette.sse import EventSourceResponse
 from openpyxl import load_workbook
 import json
 import asyncio
 
 from rosetta.services.translation_service import count_cells, translate_file
+from rosetta.services import ExcelExtractor
 from .mcp import router as mcp_router, COST_PER_1000_CELLS_USD
 
 # Load environment variables from .env file
@@ -232,6 +237,139 @@ async def get_sheets(
         input_path.unlink(missing_ok=True)
 
 
+def col_to_letter(col: int) -> str:
+    """Convert column number to Excel letter (1 -> A, 27 -> AA)."""
+    result = ""
+    while col > 0:
+        col, remainder = divmod(col - 1, 26)
+        result = chr(65 + remainder) + result
+    return result
+
+
+@app.post("/count")
+async def count_translatable(
+    file: UploadFile = File(..., description="Excel file to count translatable cells"),
+    sheets: Optional[str] = Form(None, description="Comma-separated sheet names (all if omitted)"),
+) -> dict:
+    """Count translatable cells in an Excel file.
+
+    Returns the number of cells containing text that would be translated.
+    Excludes formulas, numbers, dates, and empty cells.
+    """
+    # Validate file type
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No filename provided")
+
+    if not file.filename.lower().endswith((".xlsx", ".xlsm", ".xltx", ".xltm")):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid file type. Only Excel files (.xlsx, .xlsm, .xltx, .xltm) are supported",
+        )
+
+    # Read file content
+    content = await file.read()
+
+    # Check file size
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024 * 1024)}MB",
+        )
+
+    # Parse sheets parameter
+    sheets_set = None
+    if sheets:
+        sheets_set = {s.strip() for s in sheets.split(",") if s.strip()}
+
+    # Save to temp file for processing
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp_input:
+        tmp_input.write(content)
+        input_path = Path(tmp_input.name)
+
+    try:
+        cell_count = count_cells(input_path, sheets_set)
+        scope = f"sheets: {', '.join(sorted(sheets_set))}" if sheets_set else "all sheets"
+
+        return {
+            "cell_count": cell_count,
+            "scope": scope,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Count failed: {str(e)}")
+    finally:
+        input_path.unlink(missing_ok=True)
+
+
+@app.post("/preview")
+async def preview_cells(
+    file: UploadFile = File(..., description="Excel file to preview"),
+    limit: int = Form(10, ge=1, le=50, description="Maximum number of cells to preview (1-50)"),
+    sheets: Optional[str] = Form(None, description="Comma-separated sheet names (all if omitted)"),
+) -> dict:
+    """Preview translatable cells from an Excel file.
+
+    Returns the first N cells that would be translated, showing their
+    location and content. Useful for understanding what will be translated
+    before running a full translation.
+    """
+    # Validate file type
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No filename provided")
+
+    if not file.filename.lower().endswith((".xlsx", ".xlsm", ".xltx", ".xltm")):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid file type. Only Excel files (.xlsx, .xlsm, .xltx, .xltm) are supported",
+        )
+
+    # Read file content
+    content = await file.read()
+
+    # Check file size
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024 * 1024)}MB",
+        )
+
+    # Parse sheets parameter
+    sheets_set = None
+    if sheets:
+        sheets_set = {s.strip() for s in sheets.split(",") if s.strip()}
+
+    # Save to temp file for processing
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp_input:
+        tmp_input.write(content)
+        input_path = Path(tmp_input.name)
+
+    try:
+        with ExcelExtractor(input_path, sheets=sheets_set) as extractor:
+            cells = []
+            for i, cell in enumerate(extractor.extract_cells()):
+                if i >= limit:
+                    break
+                col_letter = col_to_letter(cell.col)
+                cells.append({
+                    "sheet": cell.sheet,
+                    "cell": f"{col_letter}{cell.row}",
+                    "content": cell.value[:200] if len(cell.value) > 200 else cell.value,
+                })
+
+        scope = f"sheets: {', '.join(sorted(sheets_set))}" if sheets_set else "all sheets"
+
+        return {
+            "cells": cells,
+            "total_shown": len(cells),
+            "scope": scope,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Preview failed: {str(e)}")
+    finally:
+        input_path.unlink(missing_ok=True)
+
+
 def verify_recaptcha(token: Optional[str]) -> bool:
     """Verify reCAPTCHA token with Google's API."""
     if not RECAPTCHA_SECRET_KEY:
@@ -362,3 +500,153 @@ async def translate(
     finally:
         # Cleanup input file (output file cleaned up after response is sent)
         input_path.unlink(missing_ok=True)
+
+
+@app.post("/translate-stream")
+async def translate_stream(
+    file: UploadFile = File(..., description="Excel file to translate"),
+    target_lang: str = Form(..., description="Target language (e.g., french, spanish)"),
+    source_lang: Optional[str] = Form(None, description="Source language (auto-detect if omitted)"),
+    context: Optional[str] = Form(None, description="Additional context for accurate translations"),
+    sheets: Optional[str] = Form(None, description="Comma-separated sheet names (all if omitted)"),
+    recaptcha_token: Optional[str] = Form(None, description="reCAPTCHA token for verification"),
+):
+    """Translate an Excel file with real-time progress streaming via SSE.
+
+    Returns Server-Sent Events with progress updates and the final translated file.
+    """
+    # Verify reCAPTCHA token
+    if not verify_recaptcha(recaptcha_token):
+        raise HTTPException(
+            status_code=400,
+            detail="reCAPTCHA verification failed. Please complete the reCAPTCHA challenge.",
+        )
+
+    # Validate file type
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No filename provided")
+
+    if not file.filename.lower().endswith((".xlsx", ".xlsm", ".xltx", ".xltm")):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid file type. Only Excel files (.xlsx, .xlsm, .xltx, .xltm) are supported",
+        )
+
+    # Read file content
+    content = await file.read()
+
+    # Check file size
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024 * 1024)}MB",
+        )
+
+    # Parse sheets parameter
+    sheets_set = None
+    if sheets:
+        sheets_set = {s.strip() for s in sheets.split(",") if s.strip()}
+
+    # Save to temp file for processing
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp_input:
+        tmp_input.write(content)
+        input_path = Path(tmp_input.name)
+
+    # Check cell count
+    try:
+        cell_count = count_cells(input_path, sheets_set)
+        if cell_count > MAX_CELLS:
+            input_path.unlink(missing_ok=True)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Too many cells ({cell_count}). Maximum is {MAX_CELLS} cells per request",
+            )
+
+        if cell_count == 0:
+            input_path.unlink(missing_ok=True)
+            raise HTTPException(
+                status_code=400,
+                detail="No translatable content found in the file",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        input_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=500, detail=f"File validation failed: {str(e)}")
+
+    # Create output path
+    output_path = input_path.with_name(f"{input_path.stem}_translated.xlsx")
+    output_filename = file.filename.replace(".xlsx", f"_{target_lang}.xlsx")
+
+    # Progress queue for thread communication
+    progress_queue: queue.Queue = queue.Queue()
+    result_holder = {"result": None, "error": None}
+
+    def progress_callback(translated: int, total: int, stage: str):
+        """Callback to report translation progress."""
+        progress_queue.put({
+            "translated": translated,
+            "total": total,
+            "stage": stage,
+            "percentage": round((translated / total) * 100) if total > 0 else 0
+        })
+
+    def run_translation():
+        """Run translation in a separate thread."""
+        try:
+            result_holder["result"] = translate_file(
+                input_file=input_path,
+                output_file=output_path,
+                target_lang=target_lang,
+                source_lang=source_lang,
+                context=context,
+                sheets=sheets_set,
+                progress_callback=progress_callback,
+            )
+        except Exception as e:
+            result_holder["error"] = str(e)
+
+    # Start translation in background thread
+    thread = threading.Thread(target=run_translation)
+    thread.start()
+
+    async def event_generator():
+        """Generate SSE events for progress and completion."""
+        try:
+            while thread.is_alive() or not progress_queue.empty():
+                try:
+                    progress = progress_queue.get(timeout=0.1)
+                    yield {
+                        "event": "progress",
+                        "data": json.dumps(progress)
+                    }
+                except queue.Empty:
+                    await asyncio.sleep(0.1)
+
+            # Wait for thread to complete
+            thread.join()
+
+            # Send final result or error
+            if result_holder["error"]:
+                yield {
+                    "event": "error",
+                    "data": json.dumps({"error": result_holder["error"]})
+                }
+            else:
+                # Encode translated file as base64 for SSE
+                with open(output_path, "rb") as f:
+                    file_base64 = base64.b64encode(f.read()).decode()
+                yield {
+                    "event": "complete",
+                    "data": json.dumps({
+                        "filename": output_filename,
+                        "file_base64": file_base64,
+                        "cell_count": result_holder["result"]["cell_count"]
+                    })
+                }
+        finally:
+            # Cleanup temp files
+            input_path.unlink(missing_ok=True)
+            output_path.unlink(missing_ok=True)
+
+    return EventSourceResponse(event_generator())

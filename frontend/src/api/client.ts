@@ -1,4 +1,4 @@
-import type { TranslateRequest, TranslateResponse, SheetsResponse, FeedbackRequest, FeedbackResponse } from '../types';
+import type { TranslateRequest, TranslateResponse, SheetsResponse, FeedbackRequest, FeedbackResponse, EstimateResponse } from '../types';
 import { generateOutputFilename } from '../lib/utils';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -26,6 +26,48 @@ export async function getSheets(file: File): Promise<SheetsResponse> {
     return {
       success: true,
       sheets: data.sheets,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Network error occurred';
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+}
+
+export async function getEstimate(file: File, sheets?: string[]): Promise<EstimateResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  if (sheets && sheets.length > 0) {
+    formData.append('sheets', sheets.join(','));
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/estimate`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.detail || `Failed to get estimate with status ${response.status}`;
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      estimate: {
+        cellCount: data.cell_count,
+        estimatedCostUsd: data.estimated_cost_usd,
+        estimatedTimeSeconds: data.estimated_time_seconds,
+        estimatedTimeDisplay: data.estimated_time_display,
+      },
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Network error occurred';
