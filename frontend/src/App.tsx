@@ -35,10 +35,10 @@ function App() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 mb-6">
+                {/* <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 mb-6">
                   <Sparkles className="w-4 h-4" />
                   <span className="text-sm font-medium">Powered by Claude AI</span>
-                </div>
+                </div> */}
 
                 <h1 className="text-5xl lg:text-7xl font-bold mb-6 tracking-tight text-gray-900 dark:text-white">
                   Excel Translation

@@ -19,8 +19,6 @@ export function Footer() {
                   Walid
                 </a>
               </span>
-              <span className="text-gray-600">•</span>
-              <span>Powered by Claude AI</span>
             </div>
 
             <div className="flex items-center gap-4">
