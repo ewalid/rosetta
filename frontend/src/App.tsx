@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Sparkles, Check, ArrowRight } from 'lucide-react';
+import { Check, ArrowRight } from 'lucide-react';
 import { Header, Footer } from './components/layout';
 import { TranslateForm } from './components/features/translate';
 import { useDarkMode } from './hooks';
