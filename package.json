@@ -1,7 +1,7 @@
 {
   "name": "@ewalid/rosetta-mcp",
   "mcpName": "io.github.ewalid/rosetta-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "AI-powered Excel translation MCP server that preserves formatting, formulas, and data integrity",
   "keywords": [
     "mcp",
@@ -24,7 +24,7 @@
     "url": "https://github.com/ewalid/rosetta/issues"
   },
   "bin": {
-    "rosetta-mcp": "./bin/rosetta-mcp.sh"
+    "rosetta-mcp": "./bin/rosetta-mcp.js"
   },
   "files": [
     "bin/",

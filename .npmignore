@@ -1,0 +1,54 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Testing
+test_*.py
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Development
+.git/
+.github/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+venv/
+env/
+ENV/
+.venv
+
+# Frontend (not needed for MCP)
+frontend/
+
+# Documentation (already have README)
+docs/
+MCP_*.md
+SECURITY_*.md
+TEST_RESULTS.md
+READY_TO_PUBLISH.md
+DEPLOYMENT_READY.md
+PUBLISH_CHECKLIST.md
+COMPREHENSIVE_SECURITY_AUDIT.md
+
+# Examples
+excel-examples/
+*.xlsx
+*.xls
