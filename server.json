@@ -1,129 +1,29 @@
 {
-  "name": "rosetta",
-  "displayName": "Rosetta Excel Translation",
-  "description": "AI-powered Excel translation that preserves formatting, formulas, and data integrity. Translate Excel files to 30+ languages while maintaining all formatting, formulas, charts, images, and data validations.",
-  "homepage": "https://github.com/ewalid/rosetta",
-  "repository": "https://github.com/ewalid/rosetta",
-  "license": "MIT",
-  "version": "0.1.0",
-  "npmPackage": "@ewalid/rosetta-mcp",
-  "categories": [
-    "productivity",
-    "translation",
-    "office"
-  ],
-  "keywords": [
-    "excel",
-    "translation",
-    "ai",
-    "localization",
-    "i18n",
-    "xlsx",
-    "spreadsheet",
-    "claude",
-    "formatting",
-    "formulas"
-  ],
-  "installation": {
-    "type": "npm",
-    "package": "@ewalid/rosetta-mcp"
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ewalid/rosetta-mcp",
+  "description": "AI-powered Excel translation preserving formatting, formulas, and data integrity.",
+  "repository": {
+    "url": "https://github.com/ewalid/rosetta",
+    "source": "github"
   },
-  "configuration": {
-    "required": {
-      "ANTHROPIC_API_KEY": {
-        "type": "string",
-        "description": "Your Anthropic API key from console.anthropic.com. Required to perform translations using Claude AI."
-      }
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@ewalid/rosetta-mcp",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "description": "Your Anthropic API key from console.anthropic.com. Required to perform translations using Claude AI.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true,
+          "name": "ANTHROPIC_API_KEY"
+        }
+      ]
     }
-  },
-  "tools": [
-    {
-      "name": "translate_excel",
-      "description": "Translate an Excel file to a target language while preserving all formatting, formulas, images, charts, and data validations. Supports .xlsx, .xlsm, .xltx, .xltm files."
-    },
-    {
-      "name": "get_excel_sheets",
-      "description": "Get the list of sheet names in an Excel file. Useful for understanding workbook structure before translation or selecting specific sheets."
-    },
-    {
-      "name": "count_translatable_cells",
-      "description": "Count the number of translatable cells in an Excel file. Returns count of text cells (excludes formulas, numbers, dates, empty cells)."
-    },
-    {
-      "name": "preview_cells",
-      "description": "Preview translatable cells from an Excel file. Returns the first N cells with their location and content to understand what will be translated."
-    },
-    {
-      "name": "estimate_translation_cost",
-      "description": "Estimate the cost and time for translating an Excel file. Returns cell count, estimated API cost in USD, and estimated processing time."
-    }
-  ],
-  "languages": [
-    "english",
-    "french",
-    "spanish",
-    "german",
-    "italian",
-    "portuguese",
-    "dutch",
-    "russian",
-    "chinese",
-    "japanese",
-    "korean",
-    "arabic",
-    "hindi",
-    "turkish",
-    "polish",
-    "swedish",
-    "norwegian",
-    "danish",
-    "finnish",
-    "greek",
-    "czech",
-    "romanian",
-    "hungarian",
-    "thai",
-    "vietnamese",
-    "indonesian",
-    "malay",
-    "filipino",
-    "hebrew",
-    "ukrainian"
-  ],
-  "features": [
-    "Preserves Excel formatting (fonts, colors, borders)",
-    "Maintains formulas and calculations",
-    "Keeps merged cells and layouts intact",
-    "Preserves charts and images",
-    "Translates dropdown menu options",
-    "Handles rich text formatting within cells",
-    "Real-time progress tracking",
-    "Cost estimation before translation",
-    "Selective sheet translation",
-    "Cell preview before processing"
-  ],
-  "requirements": {
-    "python": ">=3.11",
-    "anthropic_api_key": true
-  },
-  "author": {
-    "name": "Walid Elmselmi",
-    "email": "ewalid@example.com",
-    "url": "https://github.com/ewalid"
-  },
-  "documentation": {
-    "setup": "https://github.com/ewalid/rosetta/blob/master/MCP_USAGE.md",
-    "testing": "https://github.com/ewalid/rosetta/blob/master/MCP_TESTING.md",
-    "readme": "https://github.com/ewalid/rosetta/blob/master/README.md"
-  },
-  "limits": {
-    "max_cells_per_file": 5000,
-    "max_file_size_mb": 50,
-    "max_sheets": 50
-  },
-  "pricing": {
-    "model": "pay-per-use",
-    "description": "Uses Claude API, billed by Anthropic. Typical cost: ~$0.05 per 1000 cells translated.",
-    "note": "API key holder is responsible for Claude API costs."
-  }
+  ]
 }
