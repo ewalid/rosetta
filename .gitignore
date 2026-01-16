@@ -61,11 +61,3 @@ dmypy.json
 
 # Ruff
 .ruff_cache/
-
-# Internal audit and planning documents
-COMPREHENSIVE_SECURITY_AUDIT.md
-DEPLOYMENT_READY.md
-MCP_AUDIT_REPORT.md
-PUBLISH_CHECKLIST.md
-SECURITY_AUDIT.md
-SECURITY_FIXES_REQUIRED.md
