@@ -171,6 +171,41 @@ The frontend runs at `http://localhost:5173` and connects to the API.
 
 The `/translate-stream` endpoint uses Server-Sent Events (SSE) to stream translation progress in real-time. The frontend automatically falls back to the standard `/translate` endpoint on networks that don't support SSE (e.g., corporate proxies).
 
+## MCP Integration
+
+Rosetta includes MCP (Model Context Protocol) servers for both Claude Desktop and Claude Web.
+
+### For Claude Desktop (Local)
+
+Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "rosetta": {
+      "command": "uv",
+      "args": ["run", "--directory", "/path/to/rosetta", "python", "-m", "rosetta.api.mcp"],
+      "env": {
+        "ANTHROPIC_API_KEY": "your-key-here"
+      }
+    }
+  }
+}
+```
+
+**Usage:** Use local file paths for best results.
+```
+Translate ~/Downloads/report.xlsx to French
+```
+
+### For Claude Web (Browser)
+
+**Note:** Claude.ai does not yet support custom MCP servers in the browser (as of January 2026).
+
+**Current recommendation:** Use the [web app](#web-app--api) for browser-based translations.
+
+See [MCP_USAGE.md](MCP_USAGE.md) for detailed instructions.
+
 ## Requirements
 
 - Python 3.11+

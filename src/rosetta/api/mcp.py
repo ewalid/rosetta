@@ -37,9 +37,12 @@ ALLOWED_LANGUAGES = {
 # Patterns to block in context (prompt injection prevention)
 DANGEROUS_PATTERNS = [
     r"ignore\s+(previous|above|all)\s+instructions?",
+    r"ignore\s+all\s+(previous|above)\s+instructions?",  # "ignore all previous instructions"
     r"disregard\s+(previous|above|all)\s+instructions?",
+    r"disregard\s+all\s+(previous|above)\s+instructions?",  # "disregard all previous instructions"
     r"forget\s+(previous|above|all)\s+instructions?",
-    r"forget\s+all\s+previous\s+instructions?",  # Match "forget all previous instructions"
+    r"forget\s+all\s+(previous|above)\s+instructions?",  # "forget all previous instructions"
+    r"forget\s+everything",  # "forget everything"
     r"new\s+instructions?:",
     r"system\s*:",
     r"assistant\s*:",
@@ -135,6 +138,11 @@ def validate_context(value: Optional[str]) -> Optional[str]:
     if value is None:
         return None
 
+    # SECURITY FIX: Normalize Unicode and remove control characters
+    import unicodedata
+    value = unicodedata.normalize('NFKC', value)
+    value = ''.join(c for c in value if unicodedata.category(c)[0] != 'C')
+
     # Length check
     if len(value) > MAX_CONTEXT_LENGTH:
         raise ValueError(f"Context exceeds maximum length of {MAX_CONTEXT_LENGTH} characters")
@@ -145,9 +153,8 @@ def validate_context(value: Optional[str]) -> Optional[str]:
         if re.search(pattern, value_lower, re.IGNORECASE):
             raise ValueError("Context contains disallowed content")
 
-    # Only allow alphanumeric, spaces, and basic punctuation
-    # This is strict but safe
-    if not re.match(r'^[\w\s\.,;:!\?\-\(\)\'\"&/]+$', value, re.UNICODE):
+    # Stricter: ASCII-only for safety
+    if not re.match(r'^[a-zA-Z0-9\s\.,;:!\?\-\(\)\'\"&/]+$', value):
         raise ValueError("Context contains invalid characters")
 
     return value.strip()
@@ -313,8 +320,13 @@ TOOLS = [
 Preserves all formatting, formulas, images, charts, and data validations.
 Supports .xlsx, .xlsm, .xltx, .xltm files.
 
-The file should be provided as base64-encoded content, and the translated
-file will be returned as base64-encoded content.""",
+IMPORTANT FOR CLAUDE: When the user uploads a file, you MUST:
+1. Read the uploaded file using your file reading capability
+2. Convert it to base64 encoding
+3. Pass the base64 string as 'file_content_base64' parameter
+4. Never pass the internal upload path - it won't work
+
+The translated file will be returned as base64-encoded content.""",
         inputSchema=MCPToolInputSchema(
             properties={
                 "file_content_base64": {
@@ -351,7 +363,9 @@ file will be returned as base64-encoded content.""",
         description="""Get the list of sheet names in an Excel file.
 
 Useful for understanding the structure of a workbook before translation,
-or to select specific sheets for translation.""",
+or to select specific sheets for translation.
+
+IMPORTANT FOR CLAUDE: When the user uploads a file, read it and convert to base64 before calling this tool.""",
         inputSchema=MCPToolInputSchema(
             properties={
                 "file_content_base64": {
@@ -368,7 +382,9 @@ or to select specific sheets for translation.""",
 
 Returns the count of cells containing text that would be translated.
 Excludes formulas, numbers, dates, and empty cells.
-Useful for estimating translation scope and cost.""",
+Useful for estimating translation scope and cost.
+
+IMPORTANT FOR CLAUDE: When the user uploads a file, read it and convert to base64 before calling this tool.""",
         inputSchema=MCPToolInputSchema(
             properties={
                 "file_content_base64": {
@@ -390,7 +406,9 @@ Useful for estimating translation scope and cost.""",
 
 Returns the first N cells that would be translated, showing their
 location and content. Useful for understanding what will be translated
-before running a full translation.""",
+before running a full translation.
+
+IMPORTANT FOR CLAUDE: When the user uploads a file, read it and convert to base64 before calling this tool.""",
         inputSchema=MCPToolInputSchema(
             properties={
                 "file_content_base64": {
@@ -415,7 +433,9 @@ before running a full translation.""",
         description="""Estimate the cost of translating an Excel file.
 
 Returns cell count, estimated API cost, and estimated processing time.
-Useful for budgeting and planning before running translations.""",
+Useful for budgeting and planning before running translations.
+
+IMPORTANT FOR CLAUDE: When the user uploads a file, read it and convert to base64 before calling this tool.""",
         inputSchema=MCPToolInputSchema(
             properties={
                 "file_content_base64": {
@@ -751,3 +771,319 @@ async def mcp_call_tool(request: MCPToolCallRequest) -> MCPToolCallResult:
             content=[MCPContentItem(text=f"Error executing {tool_name}: {str(e)}")],
             isError=True
         )
+
+
+# ============================================================================
+# MCP Stdio Server for Claude Desktop
+# ============================================================================
+
+if __name__ == "__main__":
+    import sys
+    import os
+    from mcp.server import Server
+    from mcp.server.stdio import stdio_server
+    from mcp.types import Tool, TextContent
+
+    # Create MCP server
+    app = Server("rosetta")
+
+    def file_path_to_base64(file_path: str) -> str:
+        """Convert a file path to base64."""
+        import base64
+        with open(file_path, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+
+    async def call_handler_with_path(tool_name: str, file_path: str, arguments: dict):
+        """Call a tool handler directly with a file path (skip base64 conversion for performance)."""
+        from pathlib import Path
+
+        # Map of tools to their direct path-based implementations
+        path_obj = Path(file_path)
+        sheets = set(arguments.get("sheets", [])) if arguments.get("sheets") else None
+
+        if tool_name == "get_excel_sheets":
+            with ExcelExtractor(path_obj) as extractor:
+                sheet_names = extractor.sheet_names
+            sheet_list = "\n".join(f"  {i+1}. {name}" for i, name in enumerate(sheet_names))
+            return MCPToolCallResult(content=[MCPContentItem(
+                text=f"**Excel Workbook Structure**\n\nFound {len(sheet_names)} sheet(s):\n{sheet_list}"
+            )])
+
+        elif tool_name == "count_translatable_cells":
+            cell_count = count_cells(path_obj, sheets)
+            scope = f"sheets: {', '.join(sheets)}" if sheets else "all sheets"
+            return MCPToolCallResult(content=[MCPContentItem(
+                text=f"**Cell Count**\n\nScope: {scope}\nTranslatable cells: **{cell_count}**\n\nThese are text cells that will be translated. Formulas, numbers, dates, and empty cells are excluded."
+            )])
+
+        elif tool_name == "preview_cells":
+            limit = arguments.get("limit", 10)
+            with ExcelExtractor(path_obj, sheets=sheets) as extractor:
+                cells = []
+                for i, cell in enumerate(extractor.extract_cells()):
+                    if i >= limit:
+                        break
+                    cells.append(cell)
+
+            if not cells:
+                return MCPToolCallResult(content=[MCPContentItem(text="No translatable cells found.")])
+
+            preview_lines = []
+            for cell in cells:
+                col_letter = col_to_letter(cell.col)
+                value_preview = cell.value[:60] + "..." if len(cell.value) > 60 else cell.value
+                value_preview = value_preview.replace("|", "\\|").replace("\n", " ")
+                preview_lines.append(f"| {cell.sheet} | {col_letter}{cell.row} | {value_preview} |")
+
+            table = "\n".join(preview_lines)
+            return MCPToolCallResult(content=[MCPContentItem(
+                text=f"**Cell Preview** (showing {len(cells)} cells)\n\n| Sheet | Cell | Content |\n|-------|------|---------|  \n{table}"
+            )])
+
+        elif tool_name == "estimate_translation_cost":
+            cell_count_val = count_cells(path_obj, sheets)
+            estimated_cost = (cell_count_val / 1000) * COST_PER_1000_CELLS_USD
+            estimated_seconds = cell_count_val / 50
+            time_estimate = f"{int(estimated_seconds)} seconds" if estimated_seconds < 60 else f"{estimated_seconds / 60:.1f} minutes"
+            scope = f"sheets: {', '.join(sheets)}" if sheets else "all sheets"
+
+            return MCPToolCallResult(content=[MCPContentItem(
+                text=f"**Translation Cost Estimate**\n\nScope: {scope}\n\n| Metric | Value |\n|--------|-------|\n| Translatable cells | {cell_count_val:,} |\n| Estimated API cost | ${estimated_cost:.4f} |\n| Estimated time | {time_estimate} |\n\n*Cost estimate based on Claude API pricing. Actual cost may vary based on cell content length.*"
+            )])
+
+        elif tool_name == "translate_excel":
+            # For translation, validate cell count first
+            cell_count_val = count_cells(path_obj, sheets)
+            if cell_count_val == 0:
+                return MCPToolCallResult(
+                    content=[MCPContentItem(text="No translatable content found in the file.")],
+                    isError=True
+                )
+            if cell_count_val > 5000:
+                return MCPToolCallResult(
+                    content=[MCPContentItem(text=f"File has {cell_count_val} cells, which exceeds the limit of 5000 cells.")],
+                    isError=True
+                )
+
+            # Create output path
+            target_lang = arguments["target_language"]
+            output_path = path_obj.with_name(f"{path_obj.stem}_{target_lang}.xlsx")
+
+            # Translate
+            result = translate_file(
+                input_file=path_obj,
+                output_file=output_path,
+                target_lang=target_lang,
+                source_lang=arguments.get("source_language"),
+                context=arguments.get("context"),
+                sheets=sheets,
+            )
+
+            output_filename = arguments["filename"].replace(".xlsx", f"_{target_lang}.xlsx")
+
+            # Save to the same directory as input file for easy access
+            final_output_path = path_obj.parent / output_filename
+
+            # SECURITY FIX: Prevent overwriting existing files
+            if final_output_path.exists():
+                # Generate unique filename
+                counter = 1
+                stem = final_output_path.stem
+                suffix = final_output_path.suffix
+                while final_output_path.exists():
+                    final_output_path = final_output_path.parent / f"{stem}_{counter}{suffix}"
+                    counter += 1
+                    if counter > 100:  # Safety limit
+                        raise ValueError("Too many existing files with similar names")
+
+            # Move the translated file to the final location
+            import shutil
+            shutil.move(str(output_path), str(final_output_path))
+
+            summary_text = f"""Translation complete!
+
+**Summary:**
+- Cells translated: {result['cell_count']}
+- Rich text cells: {result.get('rich_text_cells', 0)}
+- Dropdowns translated: {result.get('dropdown_count', 0)}
+- Target language: {target_lang}
+
+**Output file saved:** `{final_output_path}`
+
+The translated file has been saved to the same directory as your input file. You can open it directly from: {final_output_path}"""
+
+            return MCPToolCallResult(content=[MCPContentItem(text=summary_text)])
+
+        else:
+            raise ValueError(f"Unknown tool: {tool_name}")
+
+    @app.list_tools()
+    async def list_tools() -> list[Tool]:
+        """List available Rosetta tools."""
+        # Modify tools to accept file_path in addition to base64
+        modified_tools = []
+        for t in TOOLS:
+            props = t.inputSchema.properties.copy()
+            required = t.inputSchema.required.copy()
+
+            # If tool has file_content_base64, add file_path alternative
+            if "file_content_base64" in props:
+                # Update description for Claude Desktop usage
+                props["file_content_base64"]["description"] = (
+                    "Base64-encoded Excel file content. "
+                    "IMPORTANT: When user uploads a file, use the file's resource URI from your context instead of reading it manually. "
+                    "If you have access to the file content directly, encode it to base64."
+                )
+
+                props["file_path"] = {
+                    "type": "string",
+                    "description": "Path to a local Excel file (e.g., ~/Downloads/report.xlsx). Use this for files saved on the user's computer."
+                }
+
+                # Make both optional (one or the other is required, validated in call_tool)
+                if "file_content_base64" in required:
+                    required.remove("file_content_base64")
+
+            # Enhance description with better instructions for Claude
+            enhanced_description = t.description
+            if "IMPORTANT FOR CLAUDE:" in enhanced_description:
+                # Replace the old instructions with better ones
+                enhanced_description = enhanced_description.split("IMPORTANT FOR CLAUDE:")[0].strip()
+                enhanced_description += """
+
+USAGE INSTRUCTIONS:
+1. **For local files**: Use the 'file_path' parameter with the full path (e.g., ~/Downloads/report.xlsx)
+2. **For uploaded files**: Ask the user to save the file locally first, then use 'file_path'
+3. **For base64 input**: If you already have base64 content, use 'file_content_base64'
+
+Provide either 'file_path' OR 'file_content_base64' (not both).
+
+IMPORTANT: When using file_path, DO NOT show the base64 content to the user. Just call the tool and show the results."""
+
+            modified_tools.append(
+                Tool(
+                    name=t.name,
+                    description=enhanced_description,
+                    inputSchema={
+                        "type": t.inputSchema.type,
+                        "properties": props,
+                        "required": required
+                    }
+                )
+            )
+        return modified_tools
+
+    @app.call_tool()
+    async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+        """Execute a Rosetta tool."""
+        # Check if file input is provided
+        has_path = "file_path" in arguments and arguments.get("file_path")
+        has_base64 = "file_content_base64" in arguments and arguments.get("file_content_base64")
+
+        if not has_path and not has_base64:
+            raise ValueError(
+                "Missing required file input.\n\n"
+                "Please provide ONE of the following:\n"
+                "1. 'file_path' - Path to a local Excel file (e.g., ~/Downloads/report.xlsx)\n"
+                "2. 'file_content_base64' - Base64-encoded Excel file content\n\n"
+                "**Recommended:** Ask the user to save their Excel file locally (e.g., in Downloads folder) "
+                "and provide the path using the 'file_path' parameter. This is the most reliable method."
+            )
+
+        # Handle file_path efficiently (skip base64 for performance)
+        if has_path:
+            file_path_str = os.path.expanduser(arguments["file_path"])
+
+            # SECURITY FIX: Resolve symlinks and validate path
+            file_path_obj = Path(file_path_str).resolve()
+
+            # Validate file exists
+            if not file_path_obj.exists():
+                raise ValueError(
+                    f"File not found: {file_path_str}\n\n"
+                    f"Please check that:\n"
+                    f"1. The file path is correct\n"
+                    f"2. The file exists on the user's computer\n"
+                    f"3. You've used the full path (e.g., /Users/username/Downloads/file.xlsx)"
+                )
+
+            # Validate it's a file (not directory)
+            if not file_path_obj.is_file():
+                raise ValueError("Path must be a file, not a directory")
+
+            # CRITICAL: Validate file extension
+            if not str(file_path_obj).lower().endswith((".xlsx", ".xlsm", ".xltx", ".xltm")):
+                raise ValueError("Only Excel files (.xlsx, .xlsm, .xltx, .xltm) are allowed")
+
+            # CRITICAL: Validate file size
+            file_size = file_path_obj.stat().st_size
+            if file_size > 50 * 1024 * 1024:  # 50MB
+                raise ValueError(f"File size ({file_size / 1024 / 1024:.1f}MB) exceeds maximum of 50MB")
+
+            # CRITICAL: Validate magic bytes (ZIP signature for Excel files)
+            with open(file_path_obj, 'rb') as f:
+                magic = f.read(4)
+                if magic != b'PK\x03\x04':
+                    raise ValueError("File is not a valid Excel file (invalid format)")
+
+            # CRITICAL: Validate other parameters
+            if arguments.get("sheets"):
+                arguments["sheets"] = validate_sheets(arguments["sheets"])
+
+            if arguments.get("target_language"):
+                arguments["target_language"] = validate_language(arguments["target_language"])
+
+            if arguments.get("source_language"):
+                arguments["source_language"] = validate_language(arguments["source_language"])
+
+            if arguments.get("context"):
+                arguments["context"] = validate_context(arguments["context"])
+
+            # For file_path, we can call handlers directly without base64 conversion
+            # This is much faster for large files
+            try:
+                result = await call_handler_with_path(name, str(file_path_obj), arguments)
+                return [TextContent(type="text", text=c.text) for c in result.content]
+            except ValueError:
+                # Re-raise validation errors as-is
+                raise
+            except FileNotFoundError:
+                raise ValueError("File not found or inaccessible")
+            except PermissionError:
+                raise ValueError("Permission denied accessing file")
+            except Exception as e:
+                # Log detailed error for debugging
+                import logging
+                logging.error(f"Tool {name} error: {type(e).__name__}: {str(e)}")
+                # Return generic message to user
+                raise ValueError("Failed to process file. Please ensure it's a valid Excel file.")
+
+        # For base64 input, use the standard handlers
+        handler = TOOL_HANDLERS.get(name)
+        if not handler:
+            raise ValueError(f"Tool not found: {name}")
+
+        try:
+            result = await handler(arguments)
+            return [TextContent(type="text", text=c.text) for c in result.content]
+        except ValueError:
+            # Re-raise validation errors as-is
+            raise
+        except FileNotFoundError:
+            raise ValueError("File not found or inaccessible")
+        except PermissionError:
+            raise ValueError("Permission denied accessing file")
+        except Exception as e:
+            # Log detailed error for debugging
+            import logging
+            logging.error(f"Tool {name} error: {type(e).__name__}: {str(e)}")
+            # Return generic message to user
+            raise ValueError("Failed to process file. Please ensure it's a valid Excel file.")
+
+    # Run the stdio server
+    async def main():
+        async with stdio_server() as (read_stream, write_stream):
+            await app.run(read_stream, write_stream, app.create_initialization_options())
+
+    import asyncio
+    asyncio.run(main())
