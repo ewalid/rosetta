@@ -1,0 +1,48 @@
+{
+  "name": "@ewalid/rosetta-mcp",
+  "mcpName": "io.github.ewalid/rosetta-mcp",
+  "version": "0.1.0",
+  "description": "AI-powered Excel translation MCP server that preserves formatting, formulas, and data integrity",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "excel",
+    "translation",
+    "claude",
+    "ai",
+    "localization",
+    "i18n"
+  ],
+  "author": "Walid Elmselmi <ewalid@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ewalid/rosetta.git"
+  },
+  "homepage": "https://github.com/ewalid/rosetta",
+  "bugs": {
+    "url": "https://github.com/ewalid/rosetta/issues"
+  },
+  "bin": {
+    "rosetta-mcp": "./bin/rosetta-mcp.sh"
+  },
+  "files": [
+    "bin/",
+    "src/rosetta/",
+    "pyproject.toml",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18",
+    "python": ">=3.11"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "postinstall": "echo 'Please ensure Python 3.11+ and uv are installed. Run: pip install rosetta-xl'"
+  },
+  "peerDependencies": {},
+  "devDependencies": {}
+}
