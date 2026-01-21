@@ -5,6 +5,7 @@
     "dockerfilePath": "Dockerfile.mcp"
   },
   "deploy": {
+    "startCommand": "./entrypoint.sh",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 30
   }
