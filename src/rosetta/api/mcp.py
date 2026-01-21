@@ -492,18 +492,28 @@ IMPORTANT FOR CLAUDE: When the user uploads a file, read it and convert to base6
     ),
     MCPTool(
         name="translate_texts",
-        description="""Translate a list of text strings to a target language.
+        description="""Translate text strings to a target language using high-quality AI translation.
 
-This is the simplest way to use Rosetta - just pass an array of texts and get back translated texts.
-Perfect for when Claude has already extracted text from a file and just needs translation.
+WHEN TO USE THIS TOOL:
+- User uploads an Excel/CSV file and wants it translated
+- User has text content that needs translation
+- User asks to translate anything to another language
 
-Use this tool when you have text content that needs translation. You handle the file,
-Rosetta handles the translation with high-quality AI translation.
+HOW TO USE WITH FILES:
+1. When user uploads a file (Excel, CSV, etc.), read and parse the file content yourself
+2. Extract all text cells/values that need translation into an array
+3. Call this tool with the texts array and target language
+4. Use the returned translations to help the user (display them, create translated file, etc.)
 
-Example:
-  Input: ["Hello", "How are you?", "Thank you"]
-  Target: "french"
-  Output: ["Bonjour", "Comment allez-vous ?", "Merci"]""",
+WORKFLOW EXAMPLE:
+User: "Translate this Excel file to French"
+1. Read the uploaded Excel file
+2. Extract text values: ["Hello", "Product Name", "Description", ...]
+3. Call translate_texts(texts=["Hello", "Product Name", "Description"], target_language="french")
+4. Receive: ["Bonjour", "Nom du produit", "Description", ...]
+5. Present the translations to the user or help create the translated file
+
+Supports 30+ languages including: english, french, spanish, german, italian, portuguese, dutch, russian, chinese, japanese, korean, arabic, hindi, and more.""",
         inputSchema=MCPToolInputSchema(
             properties={
                 "texts": {
