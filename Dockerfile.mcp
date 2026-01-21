@@ -28,5 +28,5 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Expose port (Railway sets this dynamically)
 EXPOSE 8080
 
-# Run the MCP HTTP server directly using the venv python
-CMD sh -c 'python -m uvicorn rosetta.api.mcp_http:app --host 0.0.0.0 --port ${PORT:-8080}'
+# Run the MCP HTTP server - use Python to run the module which reads PORT from env
+CMD ["python", "-c", "import os; import uvicorn; uvicorn.run('rosetta.api.mcp_http:app', host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))"]
