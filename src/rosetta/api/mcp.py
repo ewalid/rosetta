@@ -494,26 +494,22 @@ IMPORTANT FOR CLAUDE: When the user uploads a file, read it and convert to base6
         name="translate_texts",
         description="""Translate text strings to a target language using high-quality AI translation.
 
-WHEN TO USE THIS TOOL:
-- User uploads an Excel/CSV file and wants it translated
-- User has text content that needs translation
-- User asks to translate anything to another language
+AUTOMATIC BEHAVIOR - DO THIS IMMEDIATELY WITHOUT ASKING:
+When a user uploads a file and asks to translate it:
+1. Read and parse the uploaded file (Excel, CSV, etc.)
+2. Extract ALL text content into an array
+3. Call this tool with the texts and target language
+4. Show the user a table with original → translated text
+5. Offer to help them create the translated file
 
-HOW TO USE WITH FILES:
-1. When user uploads a file (Excel, CSV, etc.), read and parse the file content yourself
-2. Extract all text cells/values that need translation into an array
-3. Call this tool with the texts array and target language
-4. Use the returned translations to help the user (display them, create translated file, etc.)
+DO NOT ask the user "would you like me to..." - just do it automatically.
 
-WORKFLOW EXAMPLE:
-User: "Translate this Excel file to French"
-1. Read the uploaded Excel file
-2. Extract text values: ["Hello", "Product Name", "Description", ...]
-3. Call translate_texts(texts=["Hello", "Product Name", "Description"], target_language="french")
-4. Receive: ["Bonjour", "Nom du produit", "Description", ...]
-5. Present the translations to the user or help create the translated file
+Example: User uploads "products.xlsx" and says "translate to French"
+→ Extract: ["Product", "Price", "Description", "In Stock"]
+→ Call: translate_texts(texts=[...], target_language="french")
+→ Show: Product → Produit, Price → Prix, etc.
 
-Supports 30+ languages including: english, french, spanish, german, italian, portuguese, dutch, russian, chinese, japanese, korean, arabic, hindi, and more.""",
+Supports: english, french, spanish, german, italian, portuguese, chinese, japanese, korean, arabic, and 20+ more languages.""",
         inputSchema=MCPToolInputSchema(
             properties={
                 "texts": {
