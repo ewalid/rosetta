@@ -308,6 +308,45 @@ class EstimateCostArgs(BaseModel):
         return validate_sheets(v)
 
 
+class TranslateTextsArgs(BaseModel):
+    """Validated arguments for translate_texts tool."""
+    texts: list[str]
+    target_language: str
+    source_language: Optional[str] = None
+    context: Optional[str] = None
+
+    @field_validator("texts")
+    @classmethod
+    def check_texts(cls, v: list[str]) -> list[str]:
+        if not v:
+            raise ValueError("texts array cannot be empty")
+        if len(v) > 100:
+            raise ValueError("Maximum 100 texts per request")
+        for i, text in enumerate(v):
+            if not isinstance(text, str):
+                raise ValueError(f"Text at index {i} must be a string")
+            if len(text) > 10000:
+                raise ValueError(f"Text at index {i} exceeds maximum length of 10000 characters")
+        return v
+
+    @field_validator("target_language")
+    @classmethod
+    def check_target_language(cls, v: str) -> str:
+        return validate_language(v)
+
+    @field_validator("source_language")
+    @classmethod
+    def check_source_language(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        return validate_language(v)
+
+    @field_validator("context")
+    @classmethod
+    def check_context(cls, v: Optional[str]) -> Optional[str]:
+        return validate_context(v)
+
+
 # ============================================================================
 # Tool Definitions
 # ============================================================================
@@ -449,6 +488,43 @@ IMPORTANT FOR CLAUDE: When the user uploads a file, read it and convert to base6
                 }
             },
             required=["file_content_base64"]
+        )
+    ),
+    MCPTool(
+        name="translate_texts",
+        description="""Translate a list of text strings to a target language.
+
+This is the simplest way to use Rosetta - just pass an array of texts and get back translated texts.
+Perfect for when Claude has already extracted text from a file and just needs translation.
+
+Use this tool when you have text content that needs translation. You handle the file,
+Rosetta handles the translation with high-quality AI translation.
+
+Example:
+  Input: ["Hello", "How are you?", "Thank you"]
+  Target: "french"
+  Output: ["Bonjour", "Comment allez-vous ?", "Merci"]""",
+        inputSchema=MCPToolInputSchema(
+            properties={
+                "texts": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Array of text strings to translate"
+                },
+                "target_language": {
+                    "type": "string",
+                    "description": "Target language (e.g., 'french', 'spanish', 'german', 'japanese', 'chinese')"
+                },
+                "source_language": {
+                    "type": "string",
+                    "description": "Source language (optional, auto-detected if not provided)"
+                },
+                "context": {
+                    "type": "string",
+                    "description": "Domain context for better translations (e.g., 'medical terminology', 'legal document')"
+                }
+            },
+            required=["texts", "target_language"]
         )
     ),
 ]
@@ -688,6 +764,53 @@ Scope: {scope}
         input_path.unlink(missing_ok=True)
 
 
+def tool_translate_texts(args: dict) -> MCPToolCallResult:
+    """Execute the translate_texts tool - simple text array translation."""
+    from rosetta.core.config import Config
+    from rosetta.models import TranslationBatch, Cell
+    from rosetta.services import Translator
+
+    # Validate arguments with Pydantic
+    validated = TranslateTextsArgs(**args)
+
+    try:
+        config = Config.from_env()
+        translator = Translator(config)
+
+        # Create fake cells for the batch (the translator expects Cell objects)
+        cells = [Cell(sheet="", row=i, col=1, value=text) for i, text in enumerate(validated.texts)]
+
+        batch = TranslationBatch(
+            cells=cells,
+            source_lang=validated.source_language,
+            target_lang=validated.target_language,
+            context=validated.context,
+        )
+
+        translations = translator.translate_batch(batch)
+
+        # Format as JSON array for easy parsing
+        import json
+        translations_json = json.dumps(translations, ensure_ascii=False, indent=2)
+
+        response_text = f"""**Translation Complete**
+
+Translated {len(translations)} text(s) to {validated.target_language}.
+
+**Translations (JSON array):**
+```json
+{translations_json}
+```"""
+
+        return MCPToolCallResult(content=[MCPContentItem(text=response_text)])
+
+    except Exception as e:
+        return MCPToolCallResult(
+            content=[MCPContentItem(text=f"Translation error: {str(e)}")],
+            isError=True
+        )
+
+
 # Tool dispatcher
 TOOL_HANDLERS = {
     "translate_excel": tool_translate_excel,
@@ -695,6 +818,7 @@ TOOL_HANDLERS = {
     "count_translatable_cells": tool_count_cells,
     "preview_cells": tool_preview_cells,
     "estimate_translation_cost": tool_estimate_cost,
+    "translate_texts": tool_translate_texts,
 }
 
 

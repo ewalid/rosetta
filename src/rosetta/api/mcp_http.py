@@ -24,6 +24,7 @@ from rosetta.api.mcp import (
     tool_count_cells,
     tool_preview_cells,
     tool_estimate_cost,
+    tool_translate_texts,
     validate_sheets,
     validate_language,
     validate_context,
@@ -100,6 +101,7 @@ TOOL_HANDLERS = {
     "count_translatable_cells": tool_count_cells,
     "preview_cells": tool_preview_cells,
     "estimate_translation_cost": tool_estimate_cost,
+    "translate_texts": tool_translate_texts,
 }
 
 
