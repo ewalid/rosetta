@@ -20,7 +20,6 @@ RUN uv sync
 
 # Set environment variables
 ENV ENVIRONMENT=production
-ENV PORT=8080
 
 # Add virtual environment to PATH
 ENV PATH="/app/.venv/bin:$PATH"
@@ -28,5 +27,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Expose port (Railway sets this dynamically)
 EXPOSE 8080
 
-# Run the MCP HTTP server - use Python to run the module which reads PORT from env
-CMD ["python", "-c", "import os; import uvicorn; uvicorn.run('rosetta.api.mcp_http:app', host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))"]
+# Copy and use entrypoint script for proper PORT expansion
+COPY entrypoint.sh ./
+RUN chmod +x entrypoint.sh
+CMD ["./entrypoint.sh"]
