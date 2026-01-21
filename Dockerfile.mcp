@@ -15,18 +15,18 @@ RUN pip install uv
 COPY pyproject.toml uv.lock README.md ./
 COPY src/ ./src/
 
-# Install dependencies
-RUN uv sync --no-dev
+# Install dependencies (include all, not just non-dev)
+RUN uv sync
 
 # Set environment variables
 ENV ENVIRONMENT=production
-
-# The PORT is set by Railway
 ENV PORT=8080
+
+# Add virtual environment to PATH
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Expose port (Railway sets this dynamically)
 EXPOSE 8080
 
-# Run the MCP HTTP server
-# Railway sets PORT env var, default to 8080
-CMD sh -c "uv run uvicorn rosetta.api.mcp_http:app --host 0.0.0.0 --port \${PORT:-8080}"
+# Run the MCP HTTP server directly using the venv python
+CMD ["sh", "-c", "python -m uvicorn rosetta.api.mcp_http:app --host 0.0.0.0 --port ${PORT:-8080}"]
