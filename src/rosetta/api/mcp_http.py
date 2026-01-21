@@ -94,14 +94,18 @@ def create_error(id: int | str | None, code: int, message: str, data: Any = None
     return create_response(id, error=error)
 
 
-# Tool handlers mapping
+# Tool handlers mapping - all tools available
 TOOL_HANDLERS = {
+    "translate_excel": tool_translate_excel,
+    "get_excel_sheets": tool_get_sheets,
+    "count_translatable_cells": tool_count_cells,
+    "preview_cells": tool_preview_cells,
+    "estimate_translation_cost": tool_estimate_cost,
     "translate_texts": tool_translate_texts,
 }
 
-# For HTTP/browser MCP, only expose the simple translate_texts tool
-# The base64 tools are too complex for Claude.ai browser
-HTTP_TOOLS = [tool for tool in TOOLS if tool.name == "translate_texts"]
+# Expose all tools for HTTP MCP
+HTTP_TOOLS = TOOLS
 
 
 async def handle_initialize(params: dict | None) -> dict:
