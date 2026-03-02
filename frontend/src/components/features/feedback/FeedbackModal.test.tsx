@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FeedbackModal } from './FeedbackModal';
 
@@ -25,25 +25,25 @@ describe('FeedbackModal', () => {
     expect(screen.queryByText('How satisfied are you with Rosetta?')).not.toBeInTheDocument();
   });
 
-  it('shows rating emojis on step 1', () => {
+  it('shows star rating on step 1', () => {
     render(<FeedbackModal isOpen={true} onClose={() => {}} />);
 
-    // Check for emoji buttons (5 ratings)
-    const emojiButtons = screen.getAllByRole('button').filter(
-      btn => btn.classList.contains('feedback-emoji')
+    // Check for star buttons (5 stars)
+    const starButtons = screen.getAllByRole('button').filter(
+      btn => btn.classList.contains('feedback-star')
     );
-    expect(emojiButtons).toHaveLength(5);
+    expect(starButtons).toHaveLength(5);
   });
 
   it('advances to step 2 when rating is selected', async () => {
     const user = userEvent.setup();
     render(<FeedbackModal isOpen={true} onClose={() => {}} />);
 
-    // Click the "Very Satisfied" emoji (last one)
-    const emojiButtons = screen.getAllByRole('button').filter(
-      btn => btn.classList.contains('feedback-emoji')
+    // Click the 5th star (5 out of 5)
+    const starButtons = screen.getAllByRole('button').filter(
+      btn => btn.classList.contains('feedback-star')
     );
-    await user.click(emojiButtons[4]);
+    await user.click(starButtons[4]);
 
     // Wait for step 2 to appear
     await waitFor(() => {
@@ -55,11 +55,11 @@ describe('FeedbackModal', () => {
     const user = userEvent.setup();
     render(<FeedbackModal isOpen={true} onClose={() => {}} />);
 
-    // Select a rating to advance
-    const emojiButtons = screen.getAllByRole('button').filter(
-      btn => btn.classList.contains('feedback-emoji')
+    // Select a rating to advance (3rd star)
+    const starButtons = screen.getAllByRole('button').filter(
+      btn => btn.classList.contains('feedback-star')
     );
-    await user.click(emojiButtons[2]);
+    await user.click(starButtons[2]);
 
     await waitFor(() => {
       expect(screen.getByText('Translation quality')).toBeInTheDocument();
@@ -72,11 +72,11 @@ describe('FeedbackModal', () => {
     const user = userEvent.setup();
     render(<FeedbackModal isOpen={true} onClose={() => {}} />);
 
-    // Select rating
-    const emojiButtons = screen.getAllByRole('button').filter(
-      btn => btn.classList.contains('feedback-emoji')
+    // Select rating (4th star)
+    const starButtons = screen.getAllByRole('button').filter(
+      btn => btn.classList.contains('feedback-star')
     );
-    await user.click(emojiButtons[3]);
+    await user.click(starButtons[3]);
 
     await waitFor(() => {
       expect(screen.getByText('What could we improve?')).toBeInTheDocument();
@@ -96,8 +96,9 @@ describe('FeedbackModal', () => {
     const user = userEvent.setup();
     render(<FeedbackModal isOpen={true} onClose={onClose} />);
 
-    const closeButton = screen.getByRole('button', { name: '' }); // X button has no text
-    await user.click(closeButton);
+    const closeButton = document.querySelector('.feedback-close');
+    expect(closeButton).toBeInTheDocument();
+    await user.click(closeButton!);
 
     expect(onClose).toHaveBeenCalled();
   });
@@ -109,11 +110,11 @@ describe('FeedbackModal', () => {
 
     render(<FeedbackModal isOpen={true} onClose={onClose} />);
 
-    // Step 1: Select rating
-    const emojiButtons = screen.getAllByRole('button').filter(
-      btn => btn.classList.contains('feedback-emoji')
+    // Step 1: Select rating (5th star)
+    const starButtons = screen.getAllByRole('button').filter(
+      btn => btn.classList.contains('feedback-star')
     );
-    await user.click(emojiButtons[4]);
+    await user.click(starButtons[4]);
 
     // Step 2: Select improvements
     await waitFor(() => {
@@ -137,7 +138,32 @@ describe('FeedbackModal', () => {
         rating: 5,
         improvements: ['Translation quality'],
         additionalFeedback: 'Great tool!',
+        email: undefined,
       });
+    });
+  });
+
+  it('submits feedback with optional email when provided', async () => {
+    const user = userEvent.setup();
+    vi.mocked(submitFeedback).mockResolvedValueOnce({ success: true });
+
+    render(<FeedbackModal isOpen={true} onClose={() => {}} />);
+
+    const starButtons = screen.getAllByRole('button').filter(
+      btn => btn.classList.contains('feedback-star')
+    );
+    await user.click(starButtons[4]);
+    await waitFor(() => screen.getByText('What could we improve?'));
+    await user.click(screen.getByText('Next'));
+    await waitFor(() => screen.getByText('Any additional feedback?'));
+    const emailInput = screen.getByLabelText(/email \(optional\)/i);
+    await user.type(emailInput, 'user@example.com');
+    await user.click(screen.getByText('Submit'));
+
+    await waitFor(() => {
+      expect(submitFeedback).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'user@example.com' })
+      );
     });
   });
 
@@ -148,10 +174,10 @@ describe('FeedbackModal', () => {
     render(<FeedbackModal isOpen={true} onClose={() => {}} />);
 
     // Complete the flow
-    const emojiButtons = screen.getAllByRole('button').filter(
-      btn => btn.classList.contains('feedback-emoji')
+    const starButtons = screen.getAllByRole('button').filter(
+      btn => btn.classList.contains('feedback-star')
     );
-    await user.click(emojiButtons[4]);
+    await user.click(starButtons[4]);
 
     await waitFor(() => screen.getByText('What could we improve?'));
     await user.click(screen.getByText('Speed/Performance'));
@@ -169,11 +195,11 @@ describe('FeedbackModal', () => {
     const user = userEvent.setup();
     render(<FeedbackModal isOpen={true} onClose={() => {}} />);
 
-    // Go to step 2
-    const emojiButtons = screen.getAllByRole('button').filter(
-      btn => btn.classList.contains('feedback-emoji')
+    // Go to step 2 (3rd star)
+    const starButtons = screen.getAllByRole('button').filter(
+      btn => btn.classList.contains('feedback-star')
     );
-    await user.click(emojiButtons[2]);
+    await user.click(starButtons[2]);
 
     await waitFor(() => screen.getByText('What could we improve?'));
     await user.click(screen.getByText('User interface'));

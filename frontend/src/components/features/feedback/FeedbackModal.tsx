@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, ChevronRight, ChevronLeft, CheckCircle } from 'lucide-react';
+import { X, Send, ChevronRight, ChevronLeft, CheckCircle, Star } from 'lucide-react';
 import { Button } from '../../ui';
 import { submitFeedback } from '../../../api/client';
 import './Feedback.css';
@@ -11,14 +11,6 @@ interface FeedbackModalProps {
 }
 
 type Rating = 1 | 2 | 3 | 4 | 5 | null;
-
-const ratingEmojis = [
-  { value: 1 as const, emoji: '😞', label: 'Very Dissatisfied' },
-  { value: 2 as const, emoji: '😕', label: 'Dissatisfied' },
-  { value: 3 as const, emoji: '😐', label: 'Neutral' },
-  { value: 4 as const, emoji: '😊', label: 'Satisfied' },
-  { value: 5 as const, emoji: '😍', label: 'Very Satisfied' },
-];
 
 const improvements = [
   'Translation quality',
@@ -34,6 +26,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   const [rating, setRating] = useState<Rating>(null);
   const [selectedImprovements, setSelectedImprovements] = useState<string[]>([]);
   const [additionalFeedback, setAdditionalFeedback] = useState('');
+  const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -42,6 +35,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     setRating(null);
     setSelectedImprovements([]);
     setAdditionalFeedback('');
+    setEmail('');
     setIsSubmitting(false);
     setIsSubmitted(false);
   }, []);
@@ -74,6 +68,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         rating: rating!,
         improvements: selectedImprovements,
         additionalFeedback: additionalFeedback || undefined,
+        email: email.trim() || undefined,
       });
       setIsSubmitted(true);
       // Auto-close after success
@@ -85,9 +80,9 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [rating, selectedImprovements, additionalFeedback, handleClose]);
+  }, [rating, selectedImprovements, additionalFeedback, email, handleClose]);
 
-  const canProceedToStep3 = selectedImprovements.length > 0;
+  const canProceedToStep3 = true;
 
   return (
     <AnimatePresence>
@@ -160,15 +155,22 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                       <h3 className="feedback-question">
                         How satisfied are you with Rosetta?
                       </h3>
-                      <div className="feedback-rating">
-                        {ratingEmojis.map(({ value, emoji, label }) => (
+                      <div className="feedback-stars" role="group" aria-label="Rate 1 to 5 stars">
+                        {[1, 2, 3, 4, 5].map(value => (
                           <button
                             key={value}
-                            className={`feedback-emoji ${rating === value ? 'selected' : ''}`}
-                            onClick={() => handleRatingSelect(value)}
-                            title={label}
+                            type="button"
+                            className={`feedback-star ${rating !== null && value <= rating ? 'filled' : ''}`}
+                            onClick={() => handleRatingSelect(value as Rating)}
+                            title={`${value} star${value === 1 ? '' : 's'} out of 5`}
+                            aria-label={`${value} star${value === 1 ? '' : 's'} out of 5`}
+                            aria-pressed={rating === value}
                           >
-                            <span className="feedback-emoji-icon">{emoji}</span>
+                            <Star
+                              size={32}
+                              strokeWidth={1.5}
+                              fill={rating !== null && value <= rating ? 'currentColor' : 'none'}
+                            />
                           </button>
                         ))}
                       </div>
@@ -238,6 +240,21 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                         onChange={e => setAdditionalFeedback(e.target.value)}
                         placeholder="Tell us more about your experience..."
                         rows={4}
+                      />
+                      <label className="feedback-email-label" htmlFor="feedback-email">
+                        Email (optional)
+                      </label>
+                      <p className="feedback-subtitle feedback-email-hint">
+                        So we can get back to you about your feedback.
+                      </p>
+                      <input
+                        id="feedback-email"
+                        type="email"
+                        className="feedback-email"
+                        placeholder="your@email.com"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        autoComplete="email"
                       />
                       <div className="feedback-nav">
                         <Button

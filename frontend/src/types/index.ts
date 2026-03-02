@@ -39,6 +39,7 @@ export interface FeedbackRequest {
   rating: 1 | 2 | 3 | 4 | 5;
   improvements: string[];
   additionalFeedback?: string;
+  email?: string;
 }
 
 export interface FeedbackResponse {
