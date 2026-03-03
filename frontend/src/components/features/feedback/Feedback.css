@@ -127,12 +127,12 @@
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
-  color: #ca8a04;
+  color: var(--color-neutral-300);
   transition: color 0.2s, transform 0.2s;
 }
 
 :root.dark .feedback-star {
-  color: #a16207;
+  color: var(--color-neutral-500);
 }
 
 .feedback-star:hover {
@@ -144,7 +144,10 @@
   color: #eab308;
 }
 
-:root.dark .feedback-star:hover,
+:root.dark .feedback-star:hover {
+  color: #facc15;
+}
+
 :root.dark .feedback-star.filled {
   color: #facc15;
 }
@@ -186,9 +189,10 @@
 }
 
 .feedback-chip.selected {
-  background: var(--color-accent-100);
-  border-color: var(--color-accent-500);
-  color: var(--color-accent-700);
+  background: #bbf7d0;
+  border-color: var(--color-accent-600);
+  color: var(--color-accent-800);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.4);
 }
 
 :root.dark .feedback-chip.selected {

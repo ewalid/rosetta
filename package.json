@@ -1,6 +1,5 @@
 {
   "name": "@ewalid/rosetta-mcp",
-  "mcpName": "io.github.ewalid/rosetta-mcp",
   "version": "0.1.1",
   "description": "AI-powered Excel translation MCP server that preserves formatting, formulas, and data integrity",
   "keywords": [
@@ -13,18 +12,23 @@
     "localization",
     "i18n"
   ],
-  "author": "Walid Elmselmi <ewalid@example.com>",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ewalid/rosetta.git"
-  },
   "homepage": "https://github.com/ewalid/rosetta",
   "bugs": {
     "url": "https://github.com/ewalid/rosetta/issues"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ewalid/rosetta.git"
+  },
+  "license": "MIT",
+  "author": "Walid Elmselmi <ewalid@example.com>",
+  "type": "commonjs",
+  "main": "index.js",
   "bin": {
-    "rosetta-mcp": "./bin/rosetta-mcp.js"
+    "rosetta-mcp": "bin/rosetta-mcp.js"
+  },
+  "directories": {
+    "test": "tests"
   },
   "files": [
     "bin/",
@@ -33,6 +37,11 @@
     "README.md",
     "LICENSE"
   ],
+  "scripts": {
+    "postinstall": "echo 'Please ensure Python 3.11+ and uv are installed. Run: pip install rosetta-xl'"
+  },
+  "devDependencies": {},
+  "peerDependencies": {},
   "engines": {
     "node": ">=18",
     "python": ">=3.11"
@@ -40,9 +49,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "scripts": {
-    "postinstall": "echo 'Please ensure Python 3.11+ and uv are installed. Run: pip install rosetta-xl'"
-  },
-  "peerDependencies": {},
-  "devDependencies": {}
+  "mcpName": "io.github.ewalid/rosetta-mcp"
 }
