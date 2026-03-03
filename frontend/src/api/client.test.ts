@@ -171,6 +171,24 @@ describe('API Client', () => {
       expect(body.message).toContain('None provided');
     });
 
+    it('includes optional email in message and payload when provided', async () => {
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
+      } as Response);
+
+      await submitFeedback({
+        rating: 4,
+        improvements: ['Documentation'],
+        email: 'user@example.com',
+      });
+
+      const fetchCall = vi.mocked(global.fetch).mock.calls[0];
+      const body = JSON.parse(fetchCall[1]?.body as string);
+      expect(body.message).toContain('Email: user@example.com');
+      expect(body.email).toBe('user@example.com');
+    });
+
     it('returns success even on Web3Forms error', async () => {
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,

@@ -109,50 +109,44 @@
   color: var(--color-neutral-400);
 }
 
-/* Rating emojis */
-.feedback-rating {
+/* Star rating */
+.feedback-stars {
   display: flex;
   justify-content: center;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 0.5rem;
   margin-top: 1.5rem;
 }
 
-.feedback-emoji {
+.feedback-star {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  background: var(--color-neutral-100);
-  border: 2px solid transparent;
-  border-radius: 50%;
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.5rem;
   cursor: pointer;
-  transition: all 0.2s;
+  color: #ca8a04;
+  transition: color 0.2s, transform 0.2s;
 }
 
-:root.dark .feedback-emoji {
-  background: var(--color-neutral-700);
+:root.dark .feedback-star {
+  color: #a16207;
 }
 
-.feedback-emoji:hover {
-  transform: scale(1.15);
-  border-color: var(--color-accent-300);
+.feedback-star:hover {
+  color: #eab308;
+  transform: scale(1.1);
 }
 
-.feedback-emoji.selected {
-  border-color: var(--color-accent-500);
-  background: var(--color-accent-100);
-  transform: scale(1.2);
+.feedback-star.filled {
+  color: #eab308;
 }
 
-:root.dark .feedback-emoji.selected {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: var(--color-accent-400);
-}
-
-.feedback-emoji-icon {
-  font-size: 1.75rem;
-  line-height: 1;
+:root.dark .feedback-star:hover,
+:root.dark .feedback-star.filled {
+  color: #facc15;
 }
 
 /* Improvement chips */
@@ -183,6 +177,12 @@
 
 .feedback-chip:hover {
   border-color: var(--color-accent-300);
+}
+
+.feedback-chip:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
 }
 
 .feedback-chip.selected {
@@ -227,6 +227,58 @@
 }
 
 .feedback-textarea:focus {
+  outline: none;
+  border-color: var(--color-accent-500);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Optional email field */
+.feedback-email-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-neutral-700);
+  margin-bottom: 0.25rem;
+}
+
+:root.dark .feedback-email-label {
+  color: var(--color-neutral-300);
+}
+
+.feedback-email-hint {
+  margin-bottom: 0.5rem;
+  text-align: left;
+  font-size: 0.8125rem;
+}
+
+.feedback-email {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--color-neutral-100);
+  border: 1px solid #10b981;
+  border-radius: 0.75rem;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  color: var(--color-neutral-900);
+  margin-bottom: 1.5rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+:root.dark .feedback-email {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid #10b981;
+  color: white;
+}
+
+.feedback-email::placeholder {
+  color: var(--color-neutral-400);
+}
+
+:root.dark .feedback-email::placeholder {
+  color: var(--color-neutral-500);
+}
+
+.feedback-email:focus {
   outline: none;
   border-color: var(--color-accent-500);
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);

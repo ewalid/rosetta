@@ -164,7 +164,9 @@ export async function submitFeedback(request: FeedbackRequest): Promise<Feedback
 
 Areas for Improvement: ${improvementsText}
 
-Additional Feedback: ${request.additionalFeedback || 'None provided'}`;
+Additional Feedback: ${request.additionalFeedback || 'None provided'}
+
+Email: ${request.email || 'Not provided'}`;
 
   try {
     const response = await fetch(WEB3FORMS_URL, {
@@ -177,6 +179,7 @@ Additional Feedback: ${request.additionalFeedback || 'None provided'}`;
         subject: `Rosetta Feedback - Rating ${request.rating}/5 (${ratingLabel})`,
         from_name: 'Rosetta Feedback',
         message,
+        ...(request.email && { email: request.email }),
       }),
     });
 
