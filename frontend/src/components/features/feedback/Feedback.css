@@ -127,12 +127,12 @@
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
-  color: var(--color-neutral-300);
+  color: #ca8a04;
   transition: color 0.2s, transform 0.2s;
 }
 
 :root.dark .feedback-star {
-  color: var(--color-neutral-500);
+  color: #a16207;
 }
 
 .feedback-star:hover {
@@ -144,10 +144,7 @@
   color: #eab308;
 }
 
-:root.dark .feedback-star:hover {
-  color: #facc15;
-}
-
+:root.dark .feedback-star:hover,
 :root.dark .feedback-star.filled {
   color: #facc15;
 }
