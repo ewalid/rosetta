@@ -148,10 +148,6 @@ export function useTranslate(): UseTranslateReturn {
       formData.append('sheets', request.sheets.join(','));
     }
 
-    if (request.recaptchaToken) {
-      formData.append('recaptcha_token', request.recaptchaToken);
-    }
-
     // Create abort controller for timeout
     abortControllerRef.current = new AbortController();
 
