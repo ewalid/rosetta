@@ -8,7 +8,6 @@ import threading
 from pathlib import Path
 from typing import Optional
 
-import requests
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,10 +24,6 @@ from .mcp import router as mcp_router, COST_PER_1000_CELLS_USD
 
 # Load environment variables from .env file
 load_dotenv()
-
-# reCAPTCHA configuration
-RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
-RECAPTCHA_VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify"
 
 # CORS configuration - allow frontend origins
 FRONTEND_URL = os.getenv("FRONTEND_URL", "")
@@ -370,41 +365,6 @@ async def preview_cells(
         input_path.unlink(missing_ok=True)
 
 
-def verify_recaptcha(token: Optional[str]) -> bool:
-    """Verify reCAPTCHA token with Google's API."""
-    if not RECAPTCHA_SECRET_KEY:
-        # If no secret key is configured, skip verification (for development)
-        return True
-    
-    if not token:
-        return False
-    
-    try:
-        response = requests.post(
-            RECAPTCHA_VERIFY_URL,
-            data={
-                "secret": RECAPTCHA_SECRET_KEY,
-                "response": token,
-            },
-            timeout=5,
-        )
-        response.raise_for_status()
-        result = response.json()
-        success = result.get("success", False)
-        
-        # Log error details if verification failed
-        if not success:
-            error_codes = result.get("error-codes", [])
-            print(f"reCAPTCHA verification failed. Error codes: {error_codes}")
-            print(f"Response: {result}")
-        
-        return success
-    except Exception as e:
-        # If verification fails due to network/API issues, reject the request
-        print(f"reCAPTCHA verification error: {e}")
-        return False
-
-
 @app.post("/translate")
 async def translate(
     file: UploadFile = File(..., description="Excel file to translate"),
@@ -412,20 +372,12 @@ async def translate(
     source_lang: Optional[str] = Form(None, description="Source language (auto-detect if omitted)"),
     context: Optional[str] = Form(None, description="Additional context for accurate translations"),
     sheets: Optional[str] = Form(None, description="Comma-separated sheet names (all if omitted)"),
-    recaptcha_token: Optional[str] = Form(None, description="reCAPTCHA token for verification"),
 ) -> FileResponse:
     """Translate an Excel file.
 
     Upload an Excel file and receive the translated version.
     Preserves all formatting, formulas, images, and data validations.
     """
-    # Verify reCAPTCHA token
-    if not verify_recaptcha(recaptcha_token):
-        raise HTTPException(
-            status_code=400,
-            detail="reCAPTCHA verification failed. Please complete the reCAPTCHA challenge.",
-        )
-    
     # Validate file type
     if not file.filename:
         raise HTTPException(status_code=400, detail="No filename provided")
@@ -509,19 +461,11 @@ async def translate_stream(
     source_lang: Optional[str] = Form(None, description="Source language (auto-detect if omitted)"),
     context: Optional[str] = Form(None, description="Additional context for accurate translations"),
     sheets: Optional[str] = Form(None, description="Comma-separated sheet names (all if omitted)"),
-    recaptcha_token: Optional[str] = Form(None, description="reCAPTCHA token for verification"),
 ):
     """Translate an Excel file with real-time progress streaming via SSE.
 
     Returns Server-Sent Events with progress updates and the final translated file.
     """
-    # Verify reCAPTCHA token
-    if not verify_recaptcha(recaptcha_token):
-        raise HTTPException(
-            status_code=400,
-            detail="reCAPTCHA verification failed. Please complete the reCAPTCHA challenge.",
-        )
-
     # Validate file type
     if not file.filename:
         raise HTTPException(status_code=400, detail="No filename provided")

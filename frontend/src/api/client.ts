@@ -96,10 +96,6 @@ export async function translateFile(request: TranslateRequest): Promise<Translat
     formData.append('sheets', request.sheets.join(','));
   }
 
-  if (request.recaptchaToken) {
-    formData.append('recaptcha_token', request.recaptchaToken);
-  }
-
   try {
     const response = await fetch(`${API_URL}/translate`, {
       method: 'POST',
