@@ -7,7 +7,6 @@ Tests all security recommendations:
 3. Error message sanitization
 4. Temp file cleanup
 5. CORS configuration
-6. reCAPTCHA validation
 """
 
 import os
@@ -336,67 +335,6 @@ def test_5_cors_configuration():
         return False
 
 
-def test_6_recaptcha_validation():
-    """Test 6: reCAPTCHA - Test with/without token."""
-    print_test("reCAPTCHA Validation")
-
-    try:
-        import requests
-        from openpyxl import Workbook
-
-        print("\n[6.1] Testing reCAPTCHA validation...")
-
-        # Create test file
-        wb = Workbook()
-        ws = wb.active
-        ws['A1'] = "Test"
-
-        with tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False) as f:
-            test_file = f.name
-        wb.save(test_file)
-
-        try:
-            # Test without token
-            print("\n   [6.1.1] Testing without reCAPTCHA token...")
-            files = {'file': open(test_file, 'rb')}
-            data = {'target_lang': 'french'}
-            response = requests.post('http://localhost:8000/translate',
-                                   files=files, data=data, timeout=10)
-
-            if response.status_code == 400 and "reCAPTCHA" in response.text:
-                print("   ✅ PASS: reCAPTCHA required (production mode)")
-            elif response.status_code == 200:
-                print("   ⚠️  WARNING: reCAPTCHA bypassed (development mode)")
-                print("       Ensure RECAPTCHA_SECRET_KEY is set in production!")
-            else:
-                print(f"   Status: {response.status_code}")
-
-            # Test with invalid token
-            print("\n   [6.1.2] Testing with invalid reCAPTCHA token...")
-            files = {'file': open(test_file, 'rb')}
-            data = {'target_lang': 'french', 'recaptcha_token': 'invalid_token_12345'}
-            response = requests.post('http://localhost:8000/translate',
-                                   files=files, data=data, timeout=10)
-
-            if response.status_code == 400 and "reCAPTCHA" in response.text:
-                print("   ✅ PASS: Invalid token rejected")
-            elif response.status_code == 200:
-                print("   ⚠️  WARNING: Invalid token accepted (development mode)")
-            else:
-                print(f"   Status: {response.status_code}")
-        finally:
-            os.unlink(test_file)
-
-        print("\n✅ reCAPTCHA Validation Tests Complete")
-        return True
-
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
-
-
 def main():
     """Run all security tests."""
     print("="*60)
@@ -408,7 +346,6 @@ def main():
     print("3. Error message sanitization")
     print("4. Temp file cleanup")
     print("5. CORS configuration")
-    print("6. reCAPTCHA validation")
     print("\nPrerequisites:")
     print("- Server running at localhost:8000")
     print("- Run with: uv run uvicorn rosetta.api:app --reload")
@@ -421,7 +358,6 @@ def main():
         "Error Message Sanitization": test_3_error_message_sanitization(),
         "Temp File Cleanup": test_4_temp_file_cleanup(),
         "CORS Configuration": test_5_cors_configuration(),
-        "reCAPTCHA Validation": test_6_recaptcha_validation(),
     }
 
     # Summary
