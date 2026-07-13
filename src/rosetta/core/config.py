@@ -15,7 +15,8 @@ class Config:
 
     anthropic_api_key: str
     batch_size: int = 50
-    model: str = "claude-sonnet-4-20250514"
+    # Cheapest available Claude model — override via ROSETTA_MODEL env var when upgrading
+    model: str = "claude-haiku-4-5"
     max_retries: int = 3
 
     @classmethod
@@ -31,6 +32,6 @@ class Config:
         return cls(
             anthropic_api_key=api_key,
             batch_size=int(os.getenv("ROSETTA_BATCH_SIZE", "50")),
-            model=os.getenv("ROSETTA_MODEL", "claude-sonnet-4-20250514"),
+            model=os.getenv("ROSETTA_MODEL", "claude-haiku-4-5"),
             max_retries=int(os.getenv("ROSETTA_MAX_RETRIES", "3")),
         )
