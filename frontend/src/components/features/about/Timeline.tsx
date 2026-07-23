@@ -6,7 +6,7 @@ const timelineData = [
     year: '2026-Now',
     title: 'Solutions Engineer',
     company: 'Storyblok',
-    description: 'Senior Solutions Engineerfor Storyblok’s headless CMS. Technical demos, RFP, and POCs across the sales cycle.',
+    description: 'Senior Solutions Engineerfor Storyblok’s headless CMS. Technical demos, RFPs, and POCs across the sales cycle.',
     image: '/storyblok.png',
   },
   {
