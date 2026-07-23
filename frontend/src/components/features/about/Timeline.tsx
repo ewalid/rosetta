@@ -1,10 +1,16 @@
 import { motion } from 'framer-motion';
-import { GraduationCap } from 'lucide-react';
 import './About.css';
 
 const timelineData = [
   {
-    year: '2023-Now',
+    year: '2026-Now',
+    title: 'Solutions Engineer',
+    company: 'Storyblok',
+    description: 'Enterprise pre-sales for Storyblok’s headless CMS. Technical demos, integrations, and proof-of-concepts across the sales cycle.',
+    image: '/storyblok.png',
+  },
+  {
+    year: '2023-2026',
     title: 'Solutions Engineer',
     company: 'Radancy',
     description: 'End-to-end Enterprise pre-sales. Owning the full sales cycle from discovery to deal closing.',
@@ -38,15 +44,6 @@ const timelineData = [
     description: 'Web applications for banks. First professional dev role. Inhouse JS framework, Java.',
     image: '/infotel.png',
   },
-  {
-    year: '2014-2017',
-    title: 'Bioinformatics Research',
-    company: 'Paris Diderot / Institut Curie / Inserm',
-    description: "Master's in Bioinformatics. Published 2 scientific papers on systems toxicology and circulating DNA.",
-    image: '/paris7.png',
-    icon: GraduationCap,
-    useIcon: true,
-  },
 ];
 
 export function Timeline() {
@@ -64,7 +61,6 @@ export function Timeline() {
 
       <div className="experience-grid">
         {timelineData.map((item, index) => {
-          const Icon = item.icon;
           return (
             <motion.div
               key={item.year}
@@ -75,15 +71,11 @@ export function Timeline() {
               className="experience-card"
             >
               <div className="experience-card-header">
-                {item.useIcon && Icon ? (
-                  <div className="experience-card-icon">
-                    <Icon />
-                  </div>
-                ) : item.image ? (
+                {item.image ? (
                   <div className="experience-card-image-wrapper">
-                    <img 
-                      src={item.image} 
-                      alt={`${item.company} logo`} 
+                    <img
+                      src={item.image}
+                      alt={`${item.company} logo`}
                       className="experience-card-image"
                       loading="lazy"
                     />
